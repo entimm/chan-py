@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en" style="background: #FFFFFF;height: 100%">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="description"content="KLineChart example"/>
+    <title>缠论</title>
+    <script type="text/javascript" src="/static/klinecharts.min.js"></script>
+</head>
+<body style="margin: 0;height: 100%">
+<div id="chart" style="height: 100%"></div>
+<script>
+    fetch(`/data`)
+        .then(response => response.json())
+        .then(data => {
+            console.log(data)
+            // 加载数据
+            chartDataList = data.kline_units_data.map(item => ({
+                timestamp: item.timestamp,  // Convert to milliseconds
+                open: item.open,
+                high: item.high,
+                low: item.low,
+                close: item.close,
+                volume: item.volume,
+            }))
+            // 初始化图表
+            var chart = klinecharts.init('chart', {
+                timezone: 'Asia/Shanghai',
+                customApi: {
+                    formatDate: function (dateTimeFormat, timestamp, format, type) {
+                        return timestamp
+                    }
+                }
+            })
+            chart._chartStore._timeScaleStore.setBarSpaceLimitConfig(0.1, 20)
+            // 创建一个主图技术指标
+            // chart.createIndicator('MA', false, { id: 'candle_pane' })
+            // 创建一个副图技术指标VOL
+            chart.createIndicator('VOL')
+            // 创建一个副图技术指标MACD
+            chart.createIndicator('MACD')
+            chart.applyNewData(chartDataList)
+            chart.setStyles({
+                candle: {
+                    // 蜡烛图类型 'candle_solid'|'candle_stroke'|'candle_up_stroke'|'candle_down_stroke'|'ohlc'|'area'
+                    type: 'candle_solid',
+                    // 蜡烛柱
+                    bar: {
+                        upColor: '#DF484C',
+                        downColor: '#459782',
+                        noChangeColor: '#888888',
+                        upBorderColor: '#DF484C',
+                        downBorderColor: '#459782',
+                        noChangeBorderColor: '#888888',
+                        upWickColor: '#DF484C',
+                        downWickColor: '#459782',
+                        noChangeWickColor: '#888888'
+                    },
+                },
+                indicator: {
+                    bars: [{
+                        // 'fill' | 'stroke' | 'stroke_fill'
+                        style: 'fill',
+                        // 'solid' | 'dashed'
+                        borderStyle: 'solid',
+                        borderSize: 1,
+                        borderDashedValue: [2, 2],
+                        upColor: '#ECADA9',
+                        downColor: '#A0D1CC',
+                        noChangeColor: '#888888'
+                    }],
+                    // 最新值标记
+                    lastValueMark: {
+                        show: true,
+                    },
+                }
+            });
+
+            klinecharts.registerOverlay({
+                name: 'rect',
+                lock: true,
+                totalStep: 3,
+                needDefaultPointFigure: false,
+                needDefaultXAxisFigure: true,
+                needDefaultYAxisFigure: true,
+                createPointFigures: ({coordinates}) => {
+                    if (coordinates.length > 1) {
+                        return [
+                            {
+                                type: 'polygon',
+                                attrs: {
+                                    coordinates: [
+                                        coordinates[0],
+                                        {x: coordinates[1].x, y: coordinates[0].y},
+                                        coordinates[1],
+                                        {x: coordinates[0].x, y: coordinates[1].y}
+                                    ]
+                                },
+                                styles: {style: 'stroke_fill'}
+                            }
+                        ]
+                    }
+                    return []
+                }
+            });
+
+            data.merge_kline_data.forEach(function (data) {
+                chart.createOverlay({
+                    name: 'rect',
+                    groupId: 'rect',
+                    lock: true,
+                    points: [data.begin, data.end],
+                    styles: {
+                        polygon: {
+                            color: 'rgba(128, 128, 0, 0.15)',
+                            borderColor: 'rgba(128, 128, 0, 0.5)',
+                        }
+                    },
+                });
+            })
+
+            data.bi_list_data.forEach(function (data) {
+                chart.createOverlay({
+                    name: 'segment',
+                    groupId: 'segment',
+                    lock: true,
+                    points: [data.begin, data.end],
+                    styles: {
+                        line: {
+                            color: '#000',
+                            style: data.is_sure ? 'solid' : 'dashed',
+                            dashedValue: [10, 5],
+                            size: 1
+                        }
+                    },
+                });
+            })
+            data.seg_list_data.forEach(function (data) {
+                chart.createOverlay({
+                    name: 'segment',
+                    groupId: 'segment',
+                    lock: true,
+                    points: [data.begin, data.end],
+                    styles: {
+                        line: {
+                            color: 'red',
+                            style: data.is_sure ? 'solid' : 'dashed',
+                            dashedValue: [10, 5],
+                            size: 3
+                        }
+                    },
+                });
+            })
+
+            data.zs_list_data.forEach(function (data) {
+                chart.createOverlay({
+                    name: 'rect',
+                    groupId: 'rect',
+                    lock: true,
+                    points: [data.begin, data.end],
+                    styles: {
+                        polygon: {
+                            color: 'rgba(128, 0, 128, 0.15)',
+                            borderColor: 'rgba(128, 0, 128, 0.5)',
+                        }
+                    },
+                });
+            })
+
+            data.segseg_list_data.forEach(function (data) {
+                chart.createOverlay({
+                    name: 'segment',
+                    groupId: 'segment',
+                    lock: true,
+                    points: [data.begin, data.end],
+                    styles: {
+                        line: {
+                            color: 'blue',
+                            style: data.is_sure ? 'solid' : 'dashed',
+                            dashedValue: [10, 5],
+                            size: 3
+                        }
+                    },
+                });
+            })
+
+            data.segzs_list_data.forEach(function (data) {
+                chart.createOverlay({
+                    name: 'rect',
+                    groupId: 'rect',
+                    lock: true,
+                    points: [data.begin, data.end],
+                    styles: {
+                        polygon: {
+                            color: 'rgba(0, 128, 128, 0.15)',
+                            borderColor: 'rgba(0, 128, 128, 0.5)',
+                        }
+                    },
+                });
+            })
+
+            chart._chartStore.getTimeScaleStore().zoom(1000)
+        });
+</script>
+</body>
+</html>

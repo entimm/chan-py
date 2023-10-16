@@ -1,87 +1,57 @@
-from Chan import CChan
-from ChanConfig import CChanConfig
-from Common.CEnum import AUTYPE, DATA_SRC, KL_TYPE
-from Plot.AnimatePlotDriver import CAnimateDriver
-from Plot.PlotDriver import CPlotDriver
+from flask import Flask, render_template
 
-if __name__ == "__main__":
-    code = "sz.000001"
-    begin_time = "2018-01-01"
-    end_time = None
-    data_src = DATA_SRC.BAO_STOCK
-    lv_list = [KL_TYPE.K_DAY]
+from common.const import AUTYPE, KL_TYPE
+from common.support import get_json_data
+from data_fetch.manager import DATA_SRC
+from data_process.chan import CChan
+from data_process.chan_config import CChanConfig
 
-    config = CChanConfig({
-        "bi_strict": True,
-        "triger_step": False,
-        "skip_step": 0,
-        "divergence_rate": float("inf"),
-        "bsp2_follow_1": False,
-        "bsp3_follow_1": False,
-        "min_zs_cnt": 0,
-        "bs1_peak": False,
-        "macd_algo": "peak",
-        "bs_type": '1,2,3a,1p,2s,3b',
-        "print_warning": True,
-        "zs_algo": "normal",
-    })
 
-    plot_config = {
-        "plot_kline": True,
-        "plot_kline_combine": True,
-        "plot_bi": True,
-        "plot_seg": True,
-        "plot_eigen": False,
-        "plot_zs": True,
-        "plot_macd": False,
-        "plot_mean": False,
-        "plot_channel": False,
-        "plot_bsp": True,
-        "plot_extrainfo": False,
-        "plot_demark": False,
-        "plot_marker": False,
-        "plot_rsi": False,
-        "plot_kdj": False,
-    }
+def make_chan_data(ticker, start, end, lv):
+    data_src = DATA_SRC.LOCAL
+    lv_list = [lv]
 
-    plot_para = {
-        "seg": {
-            # "plot_trendline": True,
-        },
-        "bi": {
-            # "show_num": True,
-            # "disp_end": True,
-        },
-        "figure": {
-            "x_range": 200,
-        },
-        "marker": {
-            # "markers": {  # text, position, color
-            #     '2023/06/01': ('marker here', 'up', 'red'),
-            #     '2023/06/08': ('marker here', 'down')
-            # },
-        }
-    }
     chan = CChan(
-        code=code,
-        begin_time=begin_time,
-        end_time=end_time,
+        code=ticker,
+        begin_time=start,
+        end_time=end,
         data_src=data_src,
         lv_list=lv_list,
-        config=config,
+        config=CChanConfig({
+            "bi_strict": True,
+            "triger_step": False,
+            "skip_step": 0,
+            "divergence_rate": float("inf"),
+            "bsp2_follow_1": False,
+            "bsp3_follow_1": False,
+            "min_zs_cnt": 0,
+            "bs1_peak": False,
+            "macd_algo": "peak",
+            "bs_type": '1,2,3a,1p,2s,3b',
+            "print_warning": True,
+            "zs_algo": "normal",
+        }),
         autype=AUTYPE.QFQ,
     )
 
-    if not config.triger_step:
-        plot_driver = CPlotDriver(
-            chan,
-            plot_config=plot_config,
-            plot_para=plot_para,
-        )
-        plot_driver.figure.show()
-    else:
-        CAnimateDriver(
-            chan,
-            plot_config=plot_config,
-            plot_para=plot_para,
-        )
+    return chan.kl_datas[lv]
+
+
+app = Flask(__name__, template_folder='web/templates', static_folder='web/static')
+
+
+@app.route('/data')
+def data():
+    chan_data = make_chan_data('sh.000001', '2020-01-01', '2023-09-30', KL_TYPE.K_DAY)
+    json_data = get_json_data(chan_data)
+
+    return json_data
+
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+
+if __name__ == '__main__':
+    app.run(debug=True, port=8008)
