@@ -59,8 +59,8 @@ def get_json_data(chan_data):
         item_data['is_sure'] = item.is_sure
         if item.dir == BI_DIR.DOWN:
             item_data['begin'] = {
-                'value': item.start_bi.begin_klc.get_high_peak_klu().high,
-                'timestamp': item.start_bi.begin_klc.get_low_peak_klu().time.to_str(),
+                'value': item.begin_bi.begin_klc.get_high_peak_klu().high,
+                'timestamp': item.begin_bi.begin_klc.get_low_peak_klu().time.to_str(),
             }
             item_data['end'] = {
                 'value': item.end_bi.end_klc.get_low_peak_klu().low,
@@ -68,8 +68,8 @@ def get_json_data(chan_data):
             }
         else:
             item_data['begin'] = {
-                'value': item.start_bi.begin_klc.get_low_peak_klu().low,
-                'timestamp': item.start_bi.begin_klc.get_low_peak_klu().time.to_str(),
+                'value': item.begin_bi.begin_klc.get_low_peak_klu().low,
+                'timestamp': item.begin_bi.begin_klc.get_low_peak_klu().time.to_str(),
             }
             item_data['end'] = {
                 'value': item.end_bi.end_klc.get_high_peak_klu().high,
@@ -111,8 +111,8 @@ def get_json_data(chan_data):
         item_data['is_sure'] = item.is_sure
         if item.dir == BI_DIR.DOWN:
             item_data['begin'] = {
-                'value': item.start_bi.start_bi.begin_klc.get_high_peak_klu().high,
-                'timestamp': item.start_bi.start_bi.begin_klc.get_low_peak_klu().time.to_str(),
+                'value': item.begin_bi.begin_bi.begin_klc.get_high_peak_klu().high,
+                'timestamp': item.begin_bi.begin_bi.begin_klc.get_low_peak_klu().time.to_str(),
             }
             item_data['end'] = {
                 'value': item.end_bi.end_bi.end_klc.get_low_peak_klu().low,
@@ -120,8 +120,8 @@ def get_json_data(chan_data):
             }
         else:
             item_data['begin'] = {
-                'value': item.start_bi.start_bi.begin_klc.get_low_peak_klu().low,
-                'timestamp': item.start_bi.start_bi.begin_klc.get_low_peak_klu().time.to_str(),
+                'value': item.begin_bi.begin_bi.begin_klc.get_low_peak_klu().low,
+                'timestamp': item.begin_bi.begin_bi.begin_klc.get_low_peak_klu().time.to_str(),
             }
             item_data['end'] = {
                 'value': item.end_bi.end_bi.end_klc.get_high_peak_klu().high,
@@ -138,7 +138,7 @@ def get_json_data(chan_data):
         if item.begin_bi.dir == BI_DIR.UP:
             item_data['begin'] = {
                 'value': item.high,
-                'timestamp': item.begin_bi.start_bi.begin_klc.get_low_peak_klu().time.to_str(),
+                'timestamp': item.begin_bi.begin_bi.begin_klc.get_low_peak_klu().time.to_str(),
             }
             item_data['end'] = {
                 'value': item.low,
@@ -151,7 +151,7 @@ def get_json_data(chan_data):
             }
             item_data['end'] = {
                 'value': item.high,
-                'timestamp': item.begin_bi.start_bi.begin_klc.get_low_peak_klu().time.to_str()
+                'timestamp': item.begin_bi.begin_bi.begin_klc.get_low_peak_klu().time.to_str()
             }
 
         segzs_list_data.append(item_data)

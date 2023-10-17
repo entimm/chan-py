@@ -93,7 +93,7 @@ class CZSList:
                 if not self.seg_need_cal(seg):
                     continue
                 self.clear_free_lst()
-                seg_bi_lst = bi_lst[seg.start_bi.idx:seg.end_bi.idx+1]
+                seg_bi_lst = bi_lst[seg.begin_bi.idx:seg.end_bi.idx+1]
                 self.add_zs_from_bi_range(seg_bi_lst, seg.dir, seg.is_sure)
 
             # 处理未生成新线段的部分

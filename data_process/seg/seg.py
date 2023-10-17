@@ -12,10 +12,10 @@ LINE_TYPE = TypeVar('LINE_TYPE', CBi, "CSeg")
 
 
 class CSeg(Generic[LINE_TYPE]):
-    def __init__(self, idx: int, start_bi: LINE_TYPE, end_bi: LINE_TYPE, is_sure=True, seg_dir=None, reason="normal"):
-        assert start_bi.idx == 0 or start_bi.dir == end_bi.dir or not is_sure, f"{start_bi.idx} {end_bi.idx} {start_bi.dir} {end_bi.dir}"
+    def __init__(self, idx: int, begin_bi: LINE_TYPE, end_bi: LINE_TYPE, is_sure=True, seg_dir=None, reason="normal"):
+        assert begin_bi.idx == 0 or begin_bi.dir == end_bi.dir or not is_sure, f"{begin_bi.idx} {end_bi.idx} {begin_bi.dir} {end_bi.dir}"
         self.idx = idx
-        self.start_bi = start_bi
+        self.begin_bi = begin_bi
         self.end_bi = end_bi
         self.is_sure = is_sure
         self.dir = end_bi.dir if seg_dir is None else seg_dir
@@ -36,7 +36,7 @@ class CSeg(Generic[LINE_TYPE]):
         self.reason = reason
         self.support_trend_line = None
         self.resistance_trend_line = None
-        if end_bi.idx - start_bi.idx < 2:
+        if end_bi.idx - begin_bi.idx < 2:
             self.is_sure = False
         self.check()
 
@@ -47,37 +47,37 @@ class CSeg(Generic[LINE_TYPE]):
         if not self.is_sure:
             return
         if self.is_down():
-            if self.start_bi.get_begin_val() < self.end_bi.get_end_val():
+            if self.begin_bi.get_begin_val() < self.end_bi.get_end_val():
                 raise CChanException(f"下降线段起始点应该高于结束点! idx={self.idx}", ErrCode.SEG_END_VALUE_ERR)
-        elif self.start_bi.get_begin_val() > self.end_bi.get_end_val():
+        elif self.begin_bi.get_begin_val() > self.end_bi.get_end_val():
             raise CChanException(f"上升线段起始点应该低于结束点! idx={self.idx}", ErrCode.SEG_END_VALUE_ERR)
-        if self.end_bi.idx - self.start_bi.idx < 2:
-            raise CChanException(f"线段({self.start_bi.idx}-{self.end_bi.idx})长度不能小于2! idx={self.idx}", ErrCode.SEG_LEN_ERR)
+        if self.end_bi.idx - self.begin_bi.idx < 2:
+            raise CChanException(f"线段({self.begin_bi.idx}-{self.end_bi.idx})长度不能小于2! idx={self.idx}", ErrCode.SEG_LEN_ERR)
 
     def __str__(self):
-        return f"{self.start_bi.idx}->{self.end_bi.idx}: {self.dir}  {self.is_sure}"
+        return f"{self.begin_bi.idx}->{self.end_bi.idx}: {self.dir}  {self.is_sure}"
 
     def add_zs(self, zs):
         self.zs_lst.append(zs)
 
     def cal_klu_slope(self):
-        assert self.end_bi.idx >= self.start_bi.idx
+        assert self.end_bi.idx >= self.begin_bi.idx
         return (self.get_end_val()-self.get_begin_val())/(self.get_end_klu().idx-self.get_begin_klu().idx)/self.get_begin_val()
 
     def cal_amp(self):
         return (self.get_end_val()-self.get_begin_val())/self.get_begin_val()
 
     def cal_bi_cnt(self):
-        return self.end_bi.idx-self.start_bi.idx+1
+        return self.end_bi.idx-self.begin_bi.idx+1
 
     def clear_zs_lst(self):
         self.zs_lst = []
 
     def _low(self):
-        return self.end_bi.get_end_klu().low if self.is_down() else self.start_bi.get_begin_klu().low
+        return self.end_bi.get_end_klu().low if self.is_down() else self.begin_bi.get_begin_klu().low
 
     def _high(self):
-        return self.end_bi.get_end_klu().high if self.is_up() else self.start_bi.get_begin_klu().high
+        return self.end_bi.get_end_klu().high if self.is_up() else self.begin_bi.get_begin_klu().high
 
     def is_down(self):
         return self.dir == BI_DIR.DOWN
@@ -89,7 +89,7 @@ class CSeg(Generic[LINE_TYPE]):
         return self.end_bi.get_end_val()
 
     def get_begin_val(self):
-        return self.start_bi.get_begin_val()
+        return self.begin_bi.get_begin_val()
 
     def amp(self):
         return abs(self.get_end_val() - self.get_begin_val())
@@ -98,7 +98,7 @@ class CSeg(Generic[LINE_TYPE]):
         return self.end_bi.get_end_klu()
 
     def get_begin_klu(self) -> CKLine_Unit:
-        return self.start_bi.get_begin_klu()
+        return self.begin_bi.get_begin_klu()
 
     def get_klu_cnt(self):
         return self.get_end_klu().idx - self.get_begin_klu().idx + 1

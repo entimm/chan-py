@@ -157,7 +157,7 @@ class CZS(Generic[LINE_TYPE]):
         return has_overlap(self.low, self.high, item._low(), item._high())
 
     def is_inside(self, seg: CSeg):
-        return seg.start_bi.idx <= self.begin_bi.idx <= seg.end_bi.idx
+        return seg.begin_bi.idx <= self.begin_bi.idx <= seg.end_bi.idx
 
     def is_divergence(self, config: CPointConfig, out_bi=None):
         if not self.end_bi_break(out_bi):  # 最后一笔必须突破中枢

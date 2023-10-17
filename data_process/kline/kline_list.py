@@ -111,7 +111,7 @@ def cal_seg(bi_list, seg_list):
     # 计算每一笔属于哪个线段
     bi_seg_idx_dict = {}
     for seg_idx, seg in enumerate(seg_list):
-        for i in range(seg.start_bi.idx, seg.end_bi.idx+1):
+        for i in range(seg.begin_bi.idx, seg.end_bi.idx+1):
             bi_seg_idx_dict[i] = seg_idx
     for bi in bi_list:
         bi.set_seg_idx(bi_seg_idx_dict.get(bi.idx, len(seg_list)))  # 找不到的应该都是最后一个线段的
