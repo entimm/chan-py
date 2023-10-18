@@ -5,12 +5,14 @@ class DATA_SRC(Enum):
     CCXT = auto()
     Y_FINANCE = auto()
     LOCAL = auto()
+    GENERATE = auto()
 
 FETCHER_CLASSES = {
     DATA_SRC.BAO_STOCK: "BaoStockFetcher",
     DATA_SRC.CCXT: "CcxtFetcher",
     DATA_SRC.Y_FINANCE: "YFinanceFetcher",
     DATA_SRC.LOCAL: "LocalFetcher",
+    DATA_SRC.GENERATE: "GenerateFetcher",
 }
 
 def GetStockAPI(src):

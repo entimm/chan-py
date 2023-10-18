@@ -8,7 +8,7 @@ from data_process.chan_config import CChanConfig
 
 
 def make_chan_data(ticker, start, end, lv):
-    data_src = DATA_SRC.LOCAL
+    data_src = DATA_SRC.GENERATE
     lv_list = [lv]
 
     chan = CChan(

@@ -31,7 +31,6 @@ class YFinanceFetcher(AbsStockApi):
 
             yield data_dict, False
 
-
     def __convert_period_type(self):
         _dict = {
             KL_TYPE.K_DAY: '1d',
