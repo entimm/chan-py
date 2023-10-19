@@ -3,7 +3,6 @@ import pandas as pd
 from common.const import AUTYPE, DATA_FIELD, KL_TYPE
 from common.func_util import parse_normal_date_str, str2float
 from data_fetch.abs_stock_api import AbsStockApi
-import os
 
 
 class LocalFetcher(AbsStockApi):
@@ -12,7 +11,7 @@ class LocalFetcher(AbsStockApi):
 
     def get_kl_data(self):
 
-        file_path = os.path.dirname((os.path.abspath(__file__))) + "/_local.csv"
+        file_path = "data/_local.csv"
         df = pd.read_csv(file_path)
 
         for index, row in df.iterrows():

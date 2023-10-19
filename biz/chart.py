@@ -1,8 +1,44 @@
+from common.const import AUTYPE
+from data_fetch.manager import DATA_SRC
+from data_process.chan import CChan
+from data_process.chan_chart_meta import CChanChartMeta
+from data_process.chan_config import CChanConfig
 from data_process.common.cenum import BI_DIR
 
 
+def make_chan_data(ticker, start, end, lv):
+    data_src = DATA_SRC.GENERATE
+    lv_list = [lv]
+
+    chan = CChan(
+        code=ticker,
+        begin_time=start,
+        end_time=end,
+        data_src=data_src,
+        lv_list=lv_list,
+        config=CChanConfig({
+            "bi_strict": True,
+            "divergence_rate": float("inf"),
+            "bsp2_follow_1": False,
+            "bsp3_follow_1": False,
+            "min_zs_cnt": 0,
+            "bs1_peak": False,
+            "macd_algo": "peak",
+            "bs_type": '1,2,3a,1p,2s,3b',
+            "zs_algo": "normal",
+
+            "triger_step": False,
+            "skip_step": 0,
+            "print_warning": True,
+        }),
+        autype=AUTYPE.QFQ,
+    )
+
+    return chan.kl_datas[lv]
+
 def get_json_data(chan_data):
     # merge_kline
+    meta = CChanChartMeta(chan_data)
     merge_kline_data = []
     for sublist in chan_data.lst:
         if len(sublist) > 1:
