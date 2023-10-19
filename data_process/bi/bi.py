@@ -1,12 +1,11 @@
 from typing import List, Optional
 
+from common.const import DATA_FIELD
 from data_process.common.cache import make_cache
 from data_process.common.cenum import BI_DIR, BI_TYPE, FX_TYPE, MACD_ALGO
-from common.const import DATA_FIELD
 from data_process.common.chan_exception import CChanException, ErrCode
 from data_process.kline.kline import CKLine
 from data_process.kline.kline_unit import CKLine_Unit
-
 
 class CBi:
     def __init__(self, begin_klc: CKLine, end_klc: CKLine, idx: int, is_sure: bool):
@@ -24,10 +23,11 @@ class CBi:
         self.__klc_lst: List[CKLine] = []
         self.__seg_idx: Optional[int] = None
 
+        # 解决循环引用问题
         from data_process.seg.seg import CSeg
-        self.parent_seg: Optional[CSeg[CBi]] = None  # 在哪个线段里面
+        from data_process.bsl_point.bs_point import CBS_Point
 
-        from data_process.buy_sell_point.bs_point import CBS_Point
+        self.parent_seg: Optional[CSeg[CBi]] = None  # 在哪个线段里面
         self.bsp: Optional[CBS_Point] = None  # 尾部是不是买卖点
 
         self.next: Optional[CBi] = None
@@ -37,31 +37,40 @@ class CBi:
         self._memoize_cache = {}
 
     @property
-    def begin_klc(self): return self.__begin_klc
+    def begin_klc(self):
+        return self.__begin_klc
 
     @property
-    def end_klc(self): return self.__end_klc
+    def end_klc(self):
+        return self.__end_klc
 
     @property
-    def dir(self): return self.__dir
+    def dir(self):
+        return self.__dir
 
     @property
-    def idx(self): return self.__idx
+    def idx(self):
+        return self.__idx
 
     @property
-    def type(self): return self.__type
+    def type(self):
+        return self.__type
 
     @property
-    def is_sure(self): return self.__is_sure
+    def is_sure(self):
+        return self.__is_sure
 
     @property
-    def sure_end(self): return self.__sure_end
+    def sure_end(self):
+        return self.__sure_end
 
     @property
-    def klc_lst(self): return self.__klc_lst
+    def klc_lst(self):
+        return self.__klc_lst
 
     @property
-    def seg_idx(self): return self.__seg_idx
+    def seg_idx(self):
+        return self.__seg_idx
 
     def set_seg_idx(self, idx):
         self.__seg_idx = idx
@@ -76,7 +85,9 @@ class CBi:
             else:
                 assert self.begin_klc.low < self.end_klc.high
         except Exception as e:
-            raise CChanException(f"{self.idx}:{self.begin_klc[0].time}~{self.end_klc[-1].time}笔的方向和收尾位置不一致!", ErrCode.BI_ERR) from e
+            raise CChanException(
+                f"{self.idx}:{self.begin_klc[0].time}~{self.end_klc[-1].time}笔的方向和收尾位置不一致!",
+                ErrCode.BI_ERR) from e
 
     def set(self, begin_klc: CKLine, end_klc: CKLine):
         self.__begin_klc: CKLine = begin_klc
@@ -169,17 +180,17 @@ class CBi:
 
     def cal_macd_metric(self, macd_algo, is_reverse):
         if macd_algo == MACD_ALGO.AREA:
-            return self.Cal_MACD_half(is_reverse)
+            return self.cal_macd_half(is_reverse)
         elif macd_algo == MACD_ALGO.PEAK:
-            return self.Cal_MACD_peak()
+            return self.cal_macd_peak()
         elif macd_algo == MACD_ALGO.FULL_AREA:
-            return self.Cal_MACD_area()
+            return self.cal_macd_area()
         elif macd_algo == MACD_ALGO.DIFF:
-            return self.Cal_MACD_diff()
+            return self.cal_macd_diff()
         elif macd_algo == MACD_ALGO.SLOPE:
-            return self.Cal_MACD_slope()
+            return self.cal_macd_slope()
         elif macd_algo == MACD_ALGO.AMP:
-            return self.Cal_MACD_amp()
+            return self.cal_macd_amp()
         elif macd_algo == MACD_ALGO.AMOUNT:
             return self.Cal_MACD_trade_metric(DATA_FIELD.FIELD_TURNOVER, cal_avg=False)
         elif macd_algo == MACD_ALGO.VOLUMN:
@@ -191,19 +202,21 @@ class CBi:
         elif macd_algo == MACD_ALGO.TURNRATE_AVG:
             return self.Cal_MACD_trade_metric(DATA_FIELD.FIELD_TURNRATE, cal_avg=True)
         elif macd_algo == MACD_ALGO.RSI:
-            return self.Cal_Rsi()
+            return self.cal_rsi()
         else:
-            raise CChanException(f"unsupport macd_algo={macd_algo}, should be one of area/full_area/peak/diff/slope/amp", ErrCode.PARA_ERROR)
+            raise CChanException(
+                f"unsupport macd_algo={macd_algo}, should be one of area/full_area/peak/diff/slope/amp",
+                ErrCode.PARA_ERROR)
 
     @make_cache
-    def Cal_Rsi(self):
+    def cal_rsi(self):
         rsi_lst: List[float] = []
         for klc in self.klc_lst:
             rsi_lst.extend(klu.rsi for klu in klc.lst)
-        return 10000.0/(min(rsi_lst)+1e-7) if self.is_down() else max(rsi_lst)
+        return 10000.0 / (min(rsi_lst) + 1e-7) if self.is_down() else max(rsi_lst)
 
     @make_cache
-    def Cal_MACD_area(self):
+    def cal_macd_area(self):
         _s = 1e-7
         for klc in self.klc_lst:
             for klu in klc.lst:
@@ -211,7 +224,7 @@ class CBi:
         return _s
 
     @make_cache
-    def Cal_MACD_peak(self):
+    def cal_macd_peak(self):
         peak = 1e-7
         for klc in self.klc_lst:
             for klu in klc.lst:
@@ -222,14 +235,14 @@ class CBi:
                         peak = abs(klu.macd.macd)
         return peak
 
-    def Cal_MACD_half(self, is_reverse):
+    def cal_macd_half(self, is_reverse):
         if is_reverse:
-            return self.Cal_MACD_half_reverse()
+            return self.cal_macd_half_reverse()
         else:
-            return self.Cal_MACD_half_obverse()
+            return self.cal_macd_half_obverse()
 
     @make_cache
-    def Cal_MACD_half_obverse(self):
+    def cal_macd_half_obverse(self):
         _s = 1e-7
         begin_klu = self.get_begin_klu()
         peak_macd = begin_klu.macd.macd
@@ -237,7 +250,7 @@ class CBi:
             for klu in klc.lst:
                 if klu.idx < begin_klu.idx:
                     continue
-                if klu.macd.macd*peak_macd > 0:
+                if klu.macd.macd * peak_macd > 0:
                     _s += abs(klu.macd.macd)
                 else:
                     break
@@ -247,7 +260,7 @@ class CBi:
         return _s
 
     @make_cache
-    def Cal_MACD_half_reverse(self):
+    def cal_macd_half_reverse(self):
         _s = 1e-7
         begin_klu = self.get_end_klu()
         peak_macd = begin_klu.macd.macd
@@ -255,7 +268,7 @@ class CBi:
             for klu in klc[::-1]:
                 if klu.idx > begin_klu.idx:
                     continue
-                if klu.macd.macd*peak_macd > 0:
+                if klu.macd.macd * peak_macd > 0:
                     _s += abs(klu.macd.macd)
                 else:
                     break
@@ -265,7 +278,7 @@ class CBi:
         return _s
 
     @make_cache
-    def Cal_MACD_diff(self):
+    def cal_macd_diff(self):
         """
         macd红绿柱最大值最小值之差
         """
@@ -277,25 +290,25 @@ class CBi:
                     _max = macd
                 if macd < _min:
                     _min = macd
-        return _max-_min
+        return _max - _min
 
     @make_cache
-    def Cal_MACD_slope(self):
+    def cal_macd_slope(self):
         begin_klu = self.get_begin_klu()
         end_klu = self.get_end_klu()
         if self.is_up():
-            return (end_klu.high - begin_klu.low)/end_klu.high/(end_klu.idx - begin_klu.idx + 1)
+            return (end_klu.high - begin_klu.low) / end_klu.high / (end_klu.idx - begin_klu.idx + 1)
         else:
-            return (begin_klu.high - end_klu.low)/begin_klu.high/(end_klu.idx - begin_klu.idx + 1)
+            return (begin_klu.high - end_klu.low) / begin_klu.high / (end_klu.idx - begin_klu.idx + 1)
 
     @make_cache
-    def Cal_MACD_amp(self):
+    def cal_macd_amp(self):
         begin_klu = self.get_begin_klu()
         end_klu = self.get_end_klu()
         if self.is_down():
-            return (begin_klu.high-end_klu.low)/begin_klu.high
+            return (begin_klu.high - end_klu.low) / begin_klu.high
         else:
-            return (end_klu.high-begin_klu.low)/begin_klu.low
+            return (end_klu.high - begin_klu.low) / begin_klu.low
 
     def Cal_MACD_trade_metric(self, metric: str, cal_avg=False) -> float:
         _s = 0

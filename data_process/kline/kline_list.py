@@ -2,7 +2,7 @@ from typing import List, Union, overload
 
 from data_process.bi.bi import CBi
 from data_process.bi.bi_list import CBiList
-from data_process.buy_sell_point.bs_point_list import CBSPointList
+from data_process.bsl_point.bs_point_list import CBSPointList
 from data_process.chan_config import CChanConfig
 from data_process.common.cenum import KLINE_DIR, SEG_TYPE
 from data_process.common.chan_exception import CChanException, ErrCode

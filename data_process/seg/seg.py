@@ -29,7 +29,7 @@ class CSeg(Generic[LINE_TYPE]):
         self.pre: Optional[Self] = None
         self.next: Optional[Self] = None
 
-        from data_process.buy_sell_point.bs_point import CBS_Point
+        from data_process.bsl_point.bs_point import CBS_Point
         self.bsp: Optional[CBS_Point] = None  # 尾部是不是买卖点
 
         self.bi_list: List[LINE_TYPE] = []  # 仅通过self.update_bi_list来更新
@@ -105,13 +105,13 @@ class CSeg(Generic[LINE_TYPE]):
 
     def cal_macd_metric(self, macd_algo, is_reverse):
         if macd_algo == MACD_ALGO.SLOPE:
-            return self.Cal_MACD_slope()
+            return self.cal_macd_slope()
         elif macd_algo == MACD_ALGO.AMP:
-            return self.Cal_MACD_amp()
+            return self.cal_macd_amp()
         else:
             raise CChanException(f"unsupport macd_algo={macd_algo} of Seg, should be one of slope/amp", ErrCode.PARA_ERROR)
 
-    def Cal_MACD_slope(self):
+    def cal_macd_slope(self):
         begin_klu = self.get_begin_klu()
         end_klu = self.get_end_klu()
         if self.is_up():
@@ -119,7 +119,7 @@ class CSeg(Generic[LINE_TYPE]):
         else:
             return (begin_klu.high - end_klu.low)/begin_klu.high/(end_klu.idx - begin_klu.idx + 1)
 
-    def Cal_MACD_amp(self):
+    def cal_macd_amp(self):
         begin_klu = self.get_begin_klu()
         end_klu = self.get_end_klu()
         if self.is_down():

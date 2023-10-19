@@ -1,7 +1,7 @@
 from typing import Generic, List, Optional, TypeVar
 
 from data_process.bi.bi import CBi
-from data_process.buy_sell_point.bs_point_config import CPointConfig
+from data_process.bsl_point.bs_point_config import CPointConfig
 from data_process.common.chan_exception import CChanException, ErrCode
 from data_process.common.func_util import has_overlap
 from data_process.kline.kline_unit import CKLine_Unit

@@ -220,7 +220,7 @@ class CBSPointList(Generic[LINE_TYPE, LINE_LIST_TYPE]):
                 BSP_CONF = self.config.GetBSConfig(seg.is_down())
                 real_bsp1 = bsp1_bi_idx_dict.get(bsp1_bi.idx)
                 next_seg_idx = seg.idx+1
-                next_seg = seg.next  # 可能为None, 所以并不一定可以保证next_seg_idx == next_seg.idx
+                next_seg = seg.next  # 可能为None， 所以并不一定可以保证next_seg_idx == next_seg.idx
             else:
                 next_seg = seg
                 next_seg_idx = seg.idx

@@ -3,6 +3,40 @@ from typing import Dict, List, Optional
 from data_process.common.cenum import BSP_TYPE, MACD_ALGO
 from data_process.common.func_util import _parse_inf
 
+"""
+- divergence_rate：1类买卖点背驰比例，即离开中枢的笔的 MACD 指标相对于进入中枢的笔，默认为 0.9
+- min_zs_cnt：1类买卖点至少要经历几个中枢，默认为 1
+- bsp1_only_multibi_zs: `min_zs_cnt` 计算的中枢至少 3 笔（少于 3 笔是因为开启了 `one_bi_zs` 参数），默认为 True；
+- max_bs2_rate：2类买卖点那一笔回撤最大比例，默认为 0.618
+    - 注：如果是 1.0，那么相当于允许回测到1类买卖点的位置
+- bs1_peak：1类买卖点位置是否必须是整个中枢最低点，默认为 True
+- macd_algo：MACD指标算法（可自定义）
+    - peak：红绿柱最高点（绝对值），默认【线段买卖点不支持】
+    - full_area：整根笔对应的MACD的面积【线段买卖点不支持】
+    - area：整根笔对应的MACD的面积（只考虑相应红绿柱）【线段买卖点不支持】
+    - slope：笔斜率
+    - amp：笔的涨跌幅
+    - diff：首尾K线对应的MACD柱子高度的差值的绝对值
+    - amount：笔上所有K线成交额总和
+    - volumn：笔上所有K线成交量总和
+    - amount_avg：笔上K线平均成交额
+    - volumn_avg：笔上K线平均成交量
+    - turnrate_avg：笔上K线平均换手率
+    - rsi: 笔上RSI值极值
+- bs_type：关注的买卖点类型，逗号分隔，默认"1,1p,2,2s,3a,3b"
+    - 1,2：分别表示1，2，3类买卖点
+    - 2s：类二买卖点
+    - 1p：盘整背驰1类买卖点
+    - 3a：中枢出现在1类后面的3类买卖点（3-after）
+    - 3b：中枢出现在1类前面的3类买卖点（3-before）
+- "bsp2_follow_1"：2类买卖点是否必须跟在1类买卖点后面（用于小转大时1类买卖点因为背驰度不足没生成），默认为 True
+- "bsp3_follow_1"：3类买卖点是否必须跟在1类买卖点后面（用于小转大时1类买卖点因为背驰度不足没生成），默认为 True
+- "bsp3_peak"：3类买卖点突破笔是不是必须突破中枢里面最高/最低的，默认为 False
+- "bsp2s_follow_2": 类2买卖点是否必须跟在2类买卖点后面（2类买卖点可能由于不满足 `max_bs2_rate` 最大回测比例条件没生成），默认为 False
+- "max_bsp2s_lv": 类2买卖点最大层级（距离2类买卖点的笔的距离/2），默认为None，不做限制
+- "strict_bsp3":3类买卖点对应的中枢必须紧挨着1类买卖点，默认为 False
+"""
+
 
 class CBSPointConfig:
     def __init__(self, **args):

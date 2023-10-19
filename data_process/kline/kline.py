@@ -43,6 +43,9 @@ class CKLine(CKLine_Combiner[CKLine_Unit]):
         return not has_overlap(self.get_klu_min_low(), self.get_klu_max_high(), self.next.get_klu_min_low(), self.next.get_klu_max_high(), equal=True)
 
     def check_fx_valid(self, item2: "CKLine", method, for_virtual=False):
+        """
+        检查是否满足有效的分型条件
+        """
         # for_virtual: 虚笔时使用
         assert self.next is not None and item2.pre is not None
         assert self.pre is not None

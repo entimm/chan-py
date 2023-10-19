@@ -2,7 +2,7 @@ import datetime
 from collections import defaultdict
 from typing import Dict, Iterable, List, Optional, Union
 
-from data_process.buy_sell_point.bs_point import CBS_Point
+from data_process.bsl_point.bs_point import CBS_Point
 from .chan_config import CChanConfig
 from common.const import AUTYPE, KL_TYPE
 from data_fetch.manager import DATA_SRC

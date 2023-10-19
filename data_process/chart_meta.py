@@ -1,7 +1,7 @@
 from typing import List
 
 from data_process.bi.bi import CBi
-from data_process.buy_sell_point.bs_point import CBS_Point
+from data_process.bsl_point.bs_point import CBS_Point
 from data_process.common.cenum import FX_TYPE
 from data_process.kline.kline import CKLine
 from data_process.kline.kline_list import CKLine_List
