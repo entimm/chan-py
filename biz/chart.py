@@ -3,19 +3,15 @@ from data_fetch.manager import DATA_SRC
 from data_process.chan import CChan
 from data_process.chan_chart_meta import CChanChartMeta
 from data_process.chan_config import CChanConfig
-from data_process.common.cenum import BI_DIR
 
 
 def make_chan_data(ticker, start, end, lv):
-    data_src = DATA_SRC.GENERATE
-    lv_list = [lv]
-
     chan = CChan(
         code=ticker,
         begin_time=start,
         end_time=end,
-        data_src=data_src,
-        lv_list=lv_list,
+        data_src=DATA_SRC.LOCAL,
+        lv_list=[lv],
         config=CChanConfig({
             "bi_strict": True,
             "divergence_rate": float("inf"),
@@ -36,161 +32,76 @@ def make_chan_data(ticker, start, end, lv):
 
     return chan.kl_datas[lv]
 
+
 def get_json_data(chan_data):
-    # merge_kline
     meta = CChanChartMeta(chan_data)
-    merge_kline_data = []
-    for sublist in chan_data.lst:
-        if len(sublist) > 1:
-            merge_kline_data.append({
-                'begin': {'value': sublist.low, 'timestamp': sublist[0].time.to_str()},
-                'end': {'value': sublist.high, 'timestamp': sublist[-1].time.to_str()}
-            })
+    datetick = meta.datetick
 
     # data.lst
-    kline_units_data = []
-    kline_units = [item for sublst in chan_data.lst for item in sublst]
-    for item in kline_units:
-        item_data = {
-            'open': item.open,
-            'high': item.high,
-            'low': item.low,
-            'close': item.close,
-            'timestamp': item.time.to_str(),
-            'volume': item.trade_info.metric['volume']
-        }
+    kline_units_data = [{
+        'timestamp': item.time.to_str(),
+        'open': item.open,
+        'high': item.high,
+        'low': item.low,
+        'close': item.close,
+        'volume': item.trade_info.metric['volume']
+    } for item in meta.klu_iter()]
 
-        kline_units_data.append(item_data)
+    # merge_kline
+    merge_kline_data = [{
+        'begin': {'timestamp': datetick[item.begin_idx], 'value': item.low},
+        'end': {'timestamp': datetick[item.end_idx], 'value': item.high}
+    } for item in meta.klc_list]
 
     # data.bi_list
-    bi_list_data = []
-    for item in chan_data.bi_list:
-        item_data = {}
-        item_data['is_sure'] = item.is_sure
-        if item.dir == BI_DIR.UP:
-            item_data['begin'] = {
-                'value': item.begin_klc.get_low_peak_klu().low,
-                'timestamp': item.begin_klc.get_low_peak_klu().time.to_str(),
-            }
-            item_data['end'] = {
-                'value': item.end_klc.get_high_peak_klu().high,
-                'timestamp': item.end_klc.get_low_peak_klu().time.to_str()
-            }
-        else:
-            item_data['begin'] = {
-                'value': item.end_klc.get_low_peak_klu().low,
-                'timestamp': item.end_klc.get_low_peak_klu().time.to_str(),
-            }
-            item_data['end'] = {
-                'value': item.begin_klc.get_high_peak_klu().high,
-                'timestamp': item.begin_klc.get_low_peak_klu().time.to_str()
-            }
-
-        bi_list_data.append(item_data)
+    bi_list_data = [{
+        'is_sure': item.is_sure,
+        'begin': {'timestamp':datetick[item.begin_x], 'value':item.begin_y},
+        'end': {'timestamp':datetick[item.end_x], 'value':item.end_y},
+    } for item in meta.bi_list]
 
     # data.seg_list
-    seg_list_data = []
-    for item in chan_data.seg_list:
-        item_data = {}
-        item_data['is_sure'] = item.is_sure
-        if item.dir == BI_DIR.DOWN:
-            item_data['begin'] = {
-                'value': item.begin_bi.begin_klc.get_high_peak_klu().high,
-                'timestamp': item.begin_bi.begin_klc.get_low_peak_klu().time.to_str(),
-            }
-            item_data['end'] = {
-                'value': item.end_bi.end_klc.get_low_peak_klu().low,
-                'timestamp': item.end_bi.end_klc.get_low_peak_klu().time.to_str()
-            }
-        else:
-            item_data['begin'] = {
-                'value': item.begin_bi.begin_klc.get_low_peak_klu().low,
-                'timestamp': item.begin_bi.begin_klc.get_low_peak_klu().time.to_str(),
-            }
-            item_data['end'] = {
-                'value': item.end_bi.end_klc.get_high_peak_klu().high,
-                'timestamp': item.end_bi.end_klc.get_low_peak_klu().time.to_str()
-            }
-
-        seg_list_data.append(item_data)
-
-    # data.zs_list
-    zs_list_data = []
-    for item in chan_data.zs_list:
-        item_data = {}
-        item_data['is_sure'] = item.is_sure
-        if item.begin_bi.dir == BI_DIR.UP:
-            item_data['begin'] = {
-                'value': item.high,
-                'timestamp': item.begin_bi.begin_klc.get_low_peak_klu().time.to_str(),
-            }
-            item_data['end'] = {
-                'value': item.low,
-                'timestamp': item.end_bi.end_klc.get_low_peak_klu().time.to_str()
-            }
-        else:
-            item_data['begin'] = {
-                'value': item.low,
-                'timestamp': item.end_bi.end_klc.get_low_peak_klu().time.to_str(),
-            }
-            item_data['end'] = {
-                'value': item.high,
-                'timestamp': item.begin_bi.begin_klc.get_low_peak_klu().time.to_str()
-            }
-
-        zs_list_data.append(item_data)
+    seg_list_data = [{
+        'is_sure': item.is_sure,
+        'begin': {'timestamp':datetick[item.begin_x], 'value':item.begin_y},
+        'end': {'timestamp':datetick[item.end_x], 'value':item.end_y},
+    } for item in meta.seg_list]
 
     # segseg_list
-    segseg_list_data = []
-    for item in chan_data.segseg_list:
-        item_data = {}
-        item_data['is_sure'] = item.is_sure
-        if item.dir == BI_DIR.DOWN:
-            item_data['begin'] = {
-                'value': item.begin_bi.begin_bi.begin_klc.get_high_peak_klu().high,
-                'timestamp': item.begin_bi.begin_bi.begin_klc.get_low_peak_klu().time.to_str(),
-            }
-            item_data['end'] = {
-                'value': item.end_bi.end_bi.end_klc.get_low_peak_klu().low,
-                'timestamp': item.end_bi.end_bi.end_klc.get_low_peak_klu().time.to_str()
-            }
-        else:
-            item_data['begin'] = {
-                'value': item.begin_bi.begin_bi.begin_klc.get_low_peak_klu().low,
-                'timestamp': item.begin_bi.begin_bi.begin_klc.get_low_peak_klu().time.to_str(),
-            }
-            item_data['end'] = {
-                'value': item.end_bi.end_bi.end_klc.get_high_peak_klu().high,
-                'timestamp': item.end_bi.end_bi.end_klc.get_low_peak_klu().time.to_str()
-            }
+    segseg_list_data = [{
+        'is_sure': item.is_sure,
+        'begin': {'timestamp':datetick[item.begin_x], 'value':item.begin_y},
+        'end': {'timestamp':datetick[item.end_x], 'value':item.end_y},
+    } for item in meta.segseg_list]
 
-        segseg_list_data.append(item_data)
+    # data.zs_list
+    zs_list_data = [{
+        'is_sure': item.is_sure,
+        'begin': {'timestamp':datetick[item.begin], 'value':item.low},
+        'end': {'timestamp':datetick[item.end], 'value':item.high},
+    } for item in meta.zs_lst]
 
     # segzs_list
-    segzs_list_data = []
-    for item in chan_data.segzs_list:
-        item_data = {}
-        item_data['is_sure'] = item.is_sure
-        if item.begin_bi.dir == BI_DIR.UP:
-            item_data['begin'] = {
-                'value': item.high,
-                'timestamp': item.begin_bi.begin_bi.begin_klc.get_low_peak_klu().time.to_str(),
-            }
-            item_data['end'] = {
-                'value': item.low,
-                'timestamp': item.end_bi.end_bi.end_klc.get_low_peak_klu().time.to_str()
-            }
-        else:
-            item_data['begin'] = {
-                'value': item.low,
-                'timestamp': item.end_bi.end_bi.end_klc.get_low_peak_klu().time.to_str(),
-            }
-            item_data['end'] = {
-                'value': item.high,
-                'timestamp': item.begin_bi.begin_bi.begin_klc.get_low_peak_klu().time.to_str()
-            }
+    segzs_list_data = [{
+        'is_sure': item.is_sure,
+        'begin': {'timestamp':datetick[item.begin], 'value':item.low},
+        'end': {'timestamp':datetick[item.end], 'value':item.high},
+    } for item in meta.segzs_lst]
 
-        segzs_list_data.append(item_data)
+    # eigenfx_lst
+    eigenfx_lst_data = [{
+        'begin': {'timestamp': datetick[item['begin_x']], 'value': item['begin_y']},
+        'end': {'timestamp': datetick[item['end_x']], 'value': item['end_y']},
+    } for item in (eigenMeta.__dict__ for item in meta.eigenfx_lst for eigenMeta in item.ele)]
+    # eigenfxbi_lst
+    eigenfxbi_lst_data = [{
+        'begin': {'timestamp': datetick[item.begin_x], 'value': item.begin_y},
+        'end': {'timestamp': datetick[item.end_x], 'value': item.end_y}
+    } for item in meta.eigenfx_lst]
+    # bs_point_lst
+    # bs_point_lst_data = [item for item in meta.bs_point_lst_data]
+    # seg_bsp_lst
+    # seg_bsp_lst_data = [item for item in meta.seg_bsp_lst_data]
 
     return {
         'merge_kline_data': merge_kline_data,
@@ -200,4 +111,8 @@ def get_json_data(chan_data):
         'zs_list_data': zs_list_data,
         'segseg_list_data': segseg_list_data,
         'segzs_list_data': segzs_list_data,
+        'eigenfx_lst_data': eigenfx_lst_data,
+        'eigenfxbi_lst_data': eigenfxbi_lst_data,
+        # 'bs_point_lst_data': bs_point_lst_data,
+        # 'seg_bsp_lst_data': seg_bsp_lst_data,
     }

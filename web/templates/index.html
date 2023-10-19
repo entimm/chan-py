@@ -1,14 +1,27 @@
 <!DOCTYPE html>
-<html lang="en" style="background: #FFFFFF;height: 100%">
+<html lang="en">
 <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <meta name="description" content="KLineChart example"/>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="KLineChart example" />
     <title>缠论</title>
     <script type="text/javascript" src="/static/klinecharts.min.js"></script>
+    <style>
+        html {
+            background: #FFFFFF;
+            height: 100%;
+        }
+        body {
+            margin: 0;
+            height: 100%;
+        }
+        #chart {
+            height: 100%;
+        }
+    </style>
 </head>
-<body style="margin: 0;height: 100%">
-<div id="chart" style="height: 100%"></div>
+<body>
+<div id="chart"></div>
 <script>
 var chart = klinecharts.init('chart', {
     timezone: 'Asia/Shanghai',
@@ -100,79 +113,83 @@ fetch(`/data`)
     }))
     chart.applyNewData(chartDataList)
 
-    data.merge_kline_data.forEach(function (data) {
+    data.merge_kline_data?.forEach(function (item) {
         chart.createOverlay({
             name: 'rect',
             groupId: 'rect',
             lock: true,
-            points: [data.begin, data.end],
+            points: [item.begin, item.end],
             styles: {
                 polygon: {
-                    color: 'rgba(128, 128, 0, 0.15)',
-                    borderColor: 'rgba(128, 128, 0, 0.5)',
+                    color: 'rgba(128, 128, 0, 0.3)',
+                    borderColor: 'rgba(128, 128, 0, 0.8)',
+                    borderStyle: item.is_sure ? 'solid' : 'dashed',
+                    borderDashedValue: [2, 1],
                 }
             },
         });
     })
 
-    data.bi_list_data.forEach(function (data) {
+    data.bi_list_data?.forEach(function (item) {
         chart.createOverlay({
             name: 'segment',
             groupId: 'segment',
             lock: true,
-            points: [data.begin, data.end],
+            points: [item.begin, item.end],
             styles: {
                 line: {
                     color: '#000',
-                    style: data.is_sure ? 'solid' : 'dashed',
+                    style: item.is_sure ? 'solid' : 'dashed',
                     dashedValue: [10, 5],
                     size: 1
                 }
             },
         });
     })
-    data.seg_list_data.forEach(function (data) {
+    data.seg_list_data?.forEach(function (item) {
         chart.createOverlay({
             name: 'segment',
             groupId: 'segment',
             lock: true,
-            points: [data.begin, data.end],
+            points: [item.begin, item.end],
             styles: {
                 line: {
                     color: 'red',
-                    style: data.is_sure ? 'solid' : 'dashed',
+                    style: item.is_sure ? 'solid' : 'dashed',
                     dashedValue: [10, 5],
-                    size: 3
+                    size: 3,
                 }
             },
         });
     })
 
-    data.zs_list_data.forEach(function (data) {
+    data.zs_list_data?.forEach(function (item) {
         chart.createOverlay({
             name: 'rect',
             groupId: 'rect',
             lock: true,
-            points: [data.begin, data.end],
+            points: [item.begin, item.end],
             styles: {
                 polygon: {
-                    color: 'rgba(128, 0, 128, 0.15)',
-                    borderColor: 'rgba(128, 0, 128, 0.5)',
+                    color: 'rgba(232,7,7,0.3)',
+                    borderColor: 'rgba(232,7,7,0.8)',
+                    borderStyle: item.is_sure ? 'solid' : 'dashed',
+                    borderDashedValue: [10, 5],
                 }
             },
         });
     })
 
-    data.segseg_list_data.forEach(function (data) {
+    data.segseg_list_data?.forEach(function (item) {
         chart.createOverlay({
             name: 'segment',
             groupId: 'segment',
             lock: true,
-            points: [data.begin, data.end],
+            points: [item.begin, item.end],
             styles: {
                 line: {
                     color: 'blue',
-                    style: data.is_sure ? 'solid' : 'dashed',
+                    style: item.is_sure ? 'solid' : 'dashed',
                     dashedValue: [10, 5],
                     size: 3
                 }
@@ -180,16 +197,52 @@ fetch(`/data`)
         });
     })
 
-    data.segzs_list_data.forEach(function (data) {
+    data.segzs_list_data?.forEach(function (item) {
         chart.createOverlay({
             name: 'rect',
             groupId: 'rect',
             lock: true,
-            points: [data.begin, data.end],
+            points: [item.begin, item.end],
             styles: {
                 polygon: {
-                    color: 'rgba(0, 128, 128, 0.15)',
-                    borderColor: 'rgba(0, 128, 128, 0.5)',
+                    color: 'rgba(0, 128, 128, 0.3)',
+                    borderColor: 'rgba(0, 128, 128, 0.8)',
+                    borderStyle: item.is_sure ? 'solid' : 'dashed',
+                    borderDashedValue: [10, 5],
+                }
+            },
+        });
+    })
+
+    data.eigenfx_lst_data?.forEach(function (item) {
+        chart.createOverlay({
+            name: 'rect',
+            groupId: 'rect',
+            lock: true,
+            points: [item.begin, item.end],
+            styles: {
+                polygon: {
+                    color: 'rgba(0, 0, 0, 0.3)',
+                    borderColor: 'rgba(0, 0, 0, 0.8)',
+                    borderStyle: item.is_sure ? 'solid' : 'dashed',
+                    borderDashedValue: [10, 5],
+                }
+            },
+        });
+    })
+
+    data.eigenfxbi_lst_data?.forEach(function (item) {
+        chart.createOverlay({
+            name: 'rect',
+            groupId: 'rect',
+            lock: true,
+            points: [item.begin, item.end],
+            styles: {
+                polygon: {
+                    color: 'rgba(236,171,7,0.3)',
+                    borderColor: 'rgba(236,171,7,0.8)',
+                    borderStyle: item.is_sure ? 'solid' : 'dashed',
+                    borderDashedValue: [10, 5],
                 }
             },
         });

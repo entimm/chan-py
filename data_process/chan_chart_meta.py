@@ -31,7 +31,7 @@ class CBiMeta:
         self.end_x = bi.get_end_klu().idx
         self.begin_y = bi.get_begin_val()
         self.end_y = bi.get_end_val()
-        self.id_sure = bi.is_sure
+        self.is_sure = bi.is_sure
 
 
 class CSegMeta:
@@ -85,6 +85,11 @@ class CEigenFXMeta:
         assert eigenFX.ele[1] is not None
         self.gap = eigenFX.ele[1].gap
         self.fx = eigenFX.ele[1].fx
+
+        self.begin_x = eigenFX.lst[0].get_begin_klu().idx
+        self.begin_y = eigenFX.lst[0].get_begin_val()
+        self.end_x = eigenFX.lst[-1].get_end_klu().idx
+        self.end_y = eigenFX.lst[-1].get_end_val()
 
 
 class CZSMeta:

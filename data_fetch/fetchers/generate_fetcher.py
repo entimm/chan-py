@@ -25,7 +25,7 @@ class GenerateFetcher(AbsStockApi):
 
         latest_price = start_price
 
-        num_k_lines = 10000
+        num_k_lines = 2000
         if_continue_reach_limit = start_reach_limit(0)
         for i in range(num_k_lines):
             # 随机决定这个时段内的最高波动和最低波动
