@@ -10,7 +10,7 @@ from data_process.common.chan_exception import ChanException, ErrCode
 from common.time import Time
 from data_process.common.func_util import check_kl_type_order, kl_type_lte_day
 from data_fetch.abs_stock_api import AbsStockApi
-from data_fetch.manager import get_stock_api
+import data_fetch.manager as fetchManager
 from data_process.kline.kline_list import Kline_List
 from data_process.kline.kline_unit import Kline_Unit
 
@@ -159,9 +159,7 @@ class Chan:
         """
         加载数据
         """
-        stockapi_cls = get_stock_api(self.data_src)
-        try:
-            stockapi_cls.do_init()
+        def process(stockapi_cls):
             for lv_idx, klu_iter in enumerate(self.init_lv_klu_iter(stockapi_cls)):
                 self.add_lv_iter(lv_idx, klu_iter)
             self.klu_cache: List[Optional[Kline_Unit]] = [None for _ in self.lv_list]
@@ -171,10 +169,9 @@ class Chan:
             if not step:  # 非回放模式全部算完之后才算一次中枢和线段
                 for lv in self.lv_list:
                     self.kl_datas[lv].cal_seg_and_zs()
-        except Exception:
-            raise
-        finally:
-            stockapi_cls.do_close()
+
+        yield from fetchManager.fetch_data(self.data_src, process)
+
         if len(self[0]) == 0:
             raise ChanException("最高级别没有获得任何数据", ErrCode.NO_DATA)
 

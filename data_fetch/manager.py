@@ -28,3 +28,13 @@ def get_stock_api(src):
         return getattr(module, cls_name)
 
     raise Exception("src type not found")
+
+def fetch_data(src, process):
+    stockapi_cls = get_stock_api(src)
+    try:
+        stockapi_cls.do_init()
+        return process(stockapi_cls)
+    except Exception:
+        raise
+    finally:
+        stockapi_cls.do_close()
