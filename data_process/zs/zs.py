@@ -87,16 +87,19 @@ class CZS(Generic[LINE_TYPE]):
     def bi_lst(self): return self.__bi_lst
 
     def update_zs_range(self, lst):
+        """更新中枢的范围"""
         self.__low: float = max(bi._low() for bi in lst)
         self.__high: float = min(bi._high() for bi in lst)
         self.__mid: float = (self.__low + self.__high) / 2  # 中枢的中点
         self.clean_cache()
 
     def is_one_bi_zs(self):
+        """判断中枢是否只包含一个笔"""
         assert self.end_bi is not None
         return self.begin_bi.idx == self.end_bi.idx
 
     def update_zs_end(self, item):
+        """更新中枢的结束部分"""
         self.__end: CKLine_Unit = item.get_end_klu()
         self.__end_bi: CBi = item
         if item._low() < self.peak_low:
@@ -113,6 +116,7 @@ class CZS(Generic[LINE_TYPE]):
             return _str
 
     def combine(self, zs2: 'CZS', combine_mode) -> bool:
+        """尝试合并两个中枢"""
         if zs2.is_one_bi_zs():
             return False
         if self.begin_bi.seg_idx != zs2.begin_bi.seg_idx:
@@ -132,6 +136,7 @@ class CZS(Generic[LINE_TYPE]):
             raise CChanException(f"{combine_mode} is unsupport zs conbine mode", ErrCode.PARA_ERROR)
 
     def do_combine(self, zs2: 'CZS'):
+        """执行合并操作"""
         if len(self.sub_zs_lst) == 0:
             self.__sub_zs_lst.append(self.make_copy())
         self.__sub_zs_lst.append(zs2)
@@ -146,6 +151,7 @@ class CZS(Generic[LINE_TYPE]):
         self.clean_cache()
 
     def try_add_to_end(self, item):
+        """尝试将一个笔添加到中枢的末尾"""
         if not self.in_range(item):
             return False
         if self.is_one_bi_zs():
@@ -154,12 +160,15 @@ class CZS(Generic[LINE_TYPE]):
         return True
 
     def in_range(self, item):
+        """判断一个笔是否在中枢的范围内"""
         return has_overlap(self.low, self.high, item._low(), item._high())
 
     def is_inside(self, seg: CSeg):
+        """判断一个段是否在中枢内部"""
         return seg.begin_bi.idx <= self.begin_bi.idx <= seg.end_bi.idx
 
     def is_divergence(self, config: CPointConfig, out_bi=None):
+        """判断中枢是否发散"""
         if not self.end_bi_break(out_bi):  # 最后一笔必须突破中枢
             return False, None
         in_metric = self.get_bi_in().cal_macd_metric(config.macd_algo, is_reverse=False)
@@ -174,6 +183,7 @@ class CZS(Generic[LINE_TYPE]):
             return out_metric <= config.divergence_rate*in_metric, out_metric/in_metric
 
     def init_from_zs(self, zs: 'CZS'):
+        """从另一个中枢初始化当前中枢"""
         self.__begin = zs.begin
         self.__end = zs.end
         self.__low = zs.low
@@ -186,11 +196,13 @@ class CZS(Generic[LINE_TYPE]):
         self.__bi_out = zs.bi_out
 
     def make_copy(self) -> 'CZS':
+        """创建当前中枢的一个副本"""
         copy = CZS(lst=None, is_sure=self.is_sure)
         copy.init_from_zs(zs=self)
         return copy
 
     def end_bi_break(self, end_bi=None) -> bool:
+        """判断最后一个笔是否突破了中枢"""
         if end_bi is None:
             end_bi = self.get_bi_out()
         assert end_bi is not None
@@ -198,6 +210,7 @@ class CZS(Generic[LINE_TYPE]):
             (end_bi.is_up() and end_bi._high() > self.high)
 
     def out_bi_is_peak(self, end_bi_idx: int):
+        """判断出中枢的笔是否是峰值"""
         # 返回 (是否最低点，bi_out与中枢里面尾部最接近它的差距比例)
         assert len(self.bi_lst) > 0
         if self.bi_out is None:
@@ -214,21 +227,26 @@ class CZS(Generic[LINE_TYPE]):
         return True, peak_rate
 
     def get_bi_in(self) -> LINE_TYPE:
+        """获取进入中枢的笔"""
         assert self.bi_in is not None
         return self.bi_in
 
     def get_bi_out(self) -> LINE_TYPE:
+        """获取进入中枢的笔"""
         assert self.__bi_out is not None
         return self.__bi_out
 
     def set_bi_in(self, bi):
+        """获取进入中枢的笔"""
         self.__bi_in = bi
         self.clean_cache()
 
     def set_bi_out(self, bi):
+        """设置离开中枢的笔"""
         self.__bi_out = bi
         self.clean_cache()
 
     def set_bi_lst(self, bi_lst):
+        """设置中枢内部的笔列表"""
         self.__bi_lst = bi_lst
         self.clean_cache()

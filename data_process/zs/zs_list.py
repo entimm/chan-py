@@ -21,6 +21,7 @@ class CZSList:
         self.last_sure_pos = -1  # 上一次计算时sure seg【起始】klu的位置，用起始原因是因为这一次计算可能最后一个线段是刚刚生成的
 
     def update_last_pos(self, seg_list: CSegListComm):
+        """更新上一次确定的位置"""
         self.last_sure_pos = -1
         if self.FORCE_CAL_ALL:
             return
@@ -30,9 +31,11 @@ class CZSList:
                 return
 
     def seg_need_cal(self, seg: CSeg):
+        """判断一个线段是否需要计算"""
         return seg.end_bi.get_end_klu().idx > self.last_sure_pos
 
     def add_to_free_lst(self, item, is_sure):
+        """将一个笔添加到自由列表中"""
         if len(self.free_item_lst) != 0 and item.idx == self.free_item_lst[-1].idx:
             # 防止笔新高或新低的更新带来bug
             self.free_item_lst = self.free_item_lst[:-1]
@@ -54,9 +57,11 @@ class CZSList:
         self.add_to_free_lst(bi, is_sure)
 
     def try_add_to_end(self, bi):
+        """尝试将一个笔添加到中枢的末尾"""
         return False if len(self.zs_lst) == 0 else self[-1].try_add_to_end(bi)
 
     def add_zs_from_bi_range(self, seg_bi_lst: list, seg_dir, seg_is_sure):
+        """从笔的范围中添加中枢"""
         deal_bi_cnt = 0
         for bi in seg_bi_lst:
             if bi.dir == seg_dir:
@@ -68,6 +73,7 @@ class CZSList:
                 self.update(bi, seg_is_sure)
 
     def try_construct_zs(self, lst, is_sure):
+        """尝试构建中枢"""
         if self.config.zs_algo == "normal":
             if not self.config.one_bi_zs:
                 if len(lst) == 1:
@@ -86,6 +92,7 @@ class CZSList:
         return CZS(lst, is_sure=is_sure) if min_high > max_low else None
 
     def cal_bi_zs(self, bi_lst: Union[CBiList, CSegListComm], seg_lst: CSegListComm):
+        """计算笔的中枢"""
         if self.config.zs_algo == "normal":
             self.zs_lst = [zs for zs in self.zs_lst if zs.end.idx is not None and zs.end.idx <= self.last_sure_pos]
 
@@ -109,6 +116,7 @@ class CZSList:
                 self.update_overseg_zs(bi)
 
     def update_overseg_zs(self, bi: CBi | CSeg):
+        """更新超过线段的中枢"""
         if len(self.zs_lst) and len(self.free_item_lst) == 0:
             if bi.next is None:
                 return
@@ -134,6 +142,7 @@ class CZSList:
         return self.zs_lst[index]
 
     def try_combine(self):
+        """尝试合并中枢"""
         if not self.config.need_combine:
             return
         while len(self.zs_lst) >= 2 and self.zs_lst[-2].combine(self.zs_lst[-1], combine_mode=self.config.zs_combine_mode):

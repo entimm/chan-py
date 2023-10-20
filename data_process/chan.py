@@ -39,9 +39,12 @@ class CChan:
             config = CChanConfig()
         self.conf = config
 
+        # 在次级别找不到K线条数
         self.kl_misalign_cnt = 0
+        # 父&子级别K线时间不一致明细
         self.kl_inconsistent_detail = defaultdict(list)
 
+        # 多级别k线单元遍历器
         self.g_kl_iter = defaultdict(list)
 
         self.do_init()
@@ -56,23 +59,35 @@ class CChan:
             self.kl_datas[self.lv_list[idx]] = CKLine_List(self.lv_list[idx], conf=self.conf)
 
     def load_stock_data(self, stockapi_instance: AbsStockApi, lv) -> Iterable[CKLine_Unit]:
+        """
+        从股票API实例加载股票数据
+        """
         for KLU_IDX, klu in enumerate(stockapi_instance.get_kl_data()):
             klu = CKLine_Unit(*klu)
             klu.set_idx(KLU_IDX)
             klu.kl_type = lv
             yield klu
 
-    def get_load_stock_iter(self, stockapi_cls, lv):
+    def get_load_stock_iter(self, stockapi_cls, lv) -> Iterable[CKLine_Unit]:
+        """
+        获取加载股票的迭代器
+        """
         stockapi_instance = stockapi_cls(code=self.code, k_type=lv, begin_date=self.begin_time, end_date=self.end_time, autype=self.autype)
         return self.load_stock_data(stockapi_instance, lv)
 
     def add_lv_iter(self, lv_idx, iter):
+        """
+        添加级别迭代器
+        """
         if isinstance(lv_idx, int):
             self.g_kl_iter[self.lv_list[lv_idx]].append(iter)
         else:
             self.g_kl_iter[lv_idx].append(iter)
 
     def get_next_lv_klu(self, lv_idx):
+        """
+        获取下一个级别的K线单元
+        """
         if isinstance(lv_idx, int):
             lv_idx = self.lv_list[lv_idx]
         try:
@@ -85,6 +100,9 @@ class CChan:
                 raise
 
     def step_load(self):
+        """
+        分步加载
+        """
         assert self.conf.triger_step
         self.do_init()  # 清空数据，防止再次重跑没有数据
         yielded = False  # 是否曾经返回过结果
@@ -97,6 +115,9 @@ class CChan:
             yield self
 
     def trigger_load(self, inp):
+        """
+        触发加载
+        """
         # 在已有pickle基础上继续计算新的
         # {type: [klu, ...]}
         if not hasattr(self, 'klu_cache'):
@@ -113,7 +134,10 @@ class CChan:
         for _ in self.load_iterator(lv_idx=0, parent_klu=None, step=False):
             ...
 
-    def init_lv_klu_iter(self, stockapi_cls):
+    def init_lv_klu_iter(self, stockapi_cls) -> List[Iterable[CKLine_Unit]]:
+        """
+        初始化级别K线单元迭代器
+        """
         # 为了跳过一些获取数据失败的级别
         lv_klu_iter = []
         valid_lv_list = []
@@ -132,6 +156,9 @@ class CChan:
         return lv_klu_iter
 
     def load(self, step=False):
+        """
+        加载数据
+        """
         stockapi_cls = GetStockAPI(self.data_src)
         try:
             stockapi_cls.do_init()
@@ -152,12 +179,18 @@ class CChan:
             raise CChanException("最高级别没有获得任何数据", ErrCode.NO_DATA)
 
     def set_klu_parent_relation(self, parent_klu, kline_unit, cur_lv, lv_idx):
+        """
+        设置K线单元的父子关系
+        """
         if self.conf.kl_data_check and kltype_lte_day(cur_lv) and kltype_lte_day(self.lv_list[lv_idx-1]):
             self.check_kl_consitent(parent_klu, kline_unit)
         parent_klu.add_children(kline_unit)
         kline_unit.set_parent(parent_klu)
 
     def add_new_kl(self, cur_lv: KL_TYPE, kline_unit):
+        """
+        添加新的K线
+        """
         try:
             self.kl_datas[cur_lv].add_single_klu(kline_unit)
         except Exception:
@@ -166,6 +199,9 @@ class CChan:
             raise
 
     def try_set_klu_idx(self, lv_idx: int, kline_unit: CKLine_Unit):
+        """
+        尝试设置K线单元的索引
+        """
         if kline_unit.idx >= 0:
             return
         if len(self[lv_idx]) == 0:
@@ -174,6 +210,10 @@ class CChan:
             kline_unit.set_idx(self[lv_idx][-1][-1].idx + 1)
 
     def load_iterator(self, lv_idx, parent_klu, step):
+        """
+        加载迭代器,递归地加载每个级别的K线数据
+        会检查K线数据的时间是否与上一级的数据对齐，这可以确保数据的一致性
+        """
         # K线时间天级别以下描述的是结束时间，如60M线，每天第一根是10点30的
         # 天以上是当天日期
         cur_lv = self.lv_list[lv_idx]
@@ -206,6 +246,9 @@ class CChan:
                 yield self
 
     def check_kl_consitent(self, parent_klu, sub_klu):
+        """
+        检查K线是否一致
+        """
         if parent_klu.time.year != sub_klu.time.year or \
            parent_klu.time.month != sub_klu.time.month or \
            parent_klu.time.day != sub_klu.time.day:
@@ -216,6 +259,9 @@ class CChan:
                 raise CChanException(f"父&子级别K线时间不一致条数超过{self.conf.max_kl_inconsistent_cnt}！！", ErrCode.KL_TIME_INCONSISTENT)
 
     def check_kl_align(self, kline_unit, lv_idx):
+        """
+        检查K线是否对齐
+        """
         if self.conf.kl_data_check and len(kline_unit.sub_kl_list) == 0:
             self.kl_misalign_cnt += 1
             if self.conf.print_warning:
@@ -232,6 +278,9 @@ class CChan:
             raise CChanException("unspoourt query type", ErrCode.COMMON_ERROR)
 
     def get_bsp(self, idx=None) -> List[CBS_Point]:
+        """
+        获取BS点
+        """
         if idx is not None:
             return sorted(self[idx].bs_point_lst.lst, key=lambda x: x.klu.time)
         assert len(self.lv_list) == 1

@@ -10,8 +10,11 @@ def make_chan_data(ticker, start, end, lv):
         code=ticker,
         begin_time=start,
         end_time=end,
+
         data_src=DATA_SRC.LOCAL,
+        autype=AUTYPE.QFQ,
         lv_list=[lv],
+
         config=CChanConfig({
             "bi_strict": True,
             "divergence_rate": float("inf"),
@@ -27,7 +30,6 @@ def make_chan_data(ticker, start, end, lv):
             "skip_step": 0,
             "print_warning": True,
         }),
-        autype=AUTYPE.QFQ,
     )
 
     return chan.kl_datas[lv]
@@ -56,36 +58,36 @@ def get_json_data(chan_data):
     # data.bi_list
     bi_list_data = [{
         'is_sure': item.is_sure,
-        'begin': {'timestamp':datetick[item.begin_x], 'value':item.begin_y},
-        'end': {'timestamp':datetick[item.end_x], 'value':item.end_y},
+        'begin': {'timestamp': datetick[item.begin_x], 'value': item.begin_y},
+        'end': {'timestamp': datetick[item.end_x], 'value': item.end_y},
     } for item in meta.bi_list]
 
     # data.seg_list
     seg_list_data = [{
         'is_sure': item.is_sure,
-        'begin': {'timestamp':datetick[item.begin_x], 'value':item.begin_y},
-        'end': {'timestamp':datetick[item.end_x], 'value':item.end_y},
+        'begin': {'timestamp': datetick[item.begin_x], 'value': item.begin_y},
+        'end': {'timestamp': datetick[item.end_x], 'value': item.end_y},
     } for item in meta.seg_list]
 
     # segseg_list
     segseg_list_data = [{
         'is_sure': item.is_sure,
-        'begin': {'timestamp':datetick[item.begin_x], 'value':item.begin_y},
-        'end': {'timestamp':datetick[item.end_x], 'value':item.end_y},
+        'begin': {'timestamp': datetick[item.begin_x], 'value': item.begin_y},
+        'end': {'timestamp': datetick[item.end_x], 'value': item.end_y},
     } for item in meta.segseg_list]
 
     # data.zs_list
     zs_list_data = [{
         'is_sure': item.is_sure,
-        'begin': {'timestamp':datetick[item.begin], 'value':item.low},
-        'end': {'timestamp':datetick[item.end], 'value':item.high},
+        'begin': {'timestamp': datetick[item.begin], 'value': item.low},
+        'end': {'timestamp': datetick[item.end], 'value': item.high},
     } for item in meta.zs_lst]
 
     # segzs_list
     segzs_list_data = [{
         'is_sure': item.is_sure,
-        'begin': {'timestamp':datetick[item.begin], 'value':item.low},
-        'end': {'timestamp':datetick[item.end], 'value':item.high},
+        'begin': {'timestamp': datetick[item.begin], 'value': item.low},
+        'end': {'timestamp': datetick[item.end], 'value': item.high},
     } for item in meta.segzs_lst]
 
     # eigenfx_lst

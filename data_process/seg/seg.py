@@ -13,6 +13,9 @@ LINE_TYPE = TypeVar('LINE_TYPE', CBi, "CSeg")
 
 class CSeg(Generic[LINE_TYPE]):
     def __init__(self, idx: int, begin_bi: LINE_TYPE, end_bi: LINE_TYPE, is_sure=True, seg_dir=None, reason="normal"):
+        """
+        初始化一个线段，需要提供线段的索引、起始笔、结束笔、是否确定、线段方向和原因。
+        """
         assert begin_bi.idx == 0 or begin_bi.dir == end_bi.dir or not is_sure, f"{begin_bi.idx} {end_bi.idx} {begin_bi.dir} {end_bi.dir}"
         self.idx = idx
         self.begin_bi = begin_bi
@@ -41,9 +44,17 @@ class CSeg(Generic[LINE_TYPE]):
         self.check()
 
     def set_seg_idx(self, idx):
+        """
+        设置线段索引
+        """
         self.seg_idx = idx
 
     def check(self):
+        """
+        验证线段的有效性
+        确保上升线段的起始值小于结束值，下降线段的起始值大于结束值
+        确保线段的长度大于2
+        """
         if not self.is_sure:
             return
         if self.is_down():
@@ -58,52 +69,103 @@ class CSeg(Generic[LINE_TYPE]):
         return f"{self.begin_bi.idx}->{self.end_bi.idx}: {self.dir}  {self.is_sure}"
 
     def add_zs(self, zs):
+        """
+        向线段添加中枢
+        """
         self.zs_lst.append(zs)
 
     def cal_klu_slope(self):
+        """
+        计算线段的斜率，即结束值与开始值的差值除以它们之间的K线单元数量
+        """
         assert self.end_bi.idx >= self.begin_bi.idx
         return (self.get_end_val()-self.get_begin_val())/(self.get_end_klu().idx-self.get_begin_klu().idx)/self.get_begin_val()
 
     def cal_amp(self):
+        """
+        计算线段的振幅，即结束值与开始值的差值
+        """
         return (self.get_end_val()-self.get_begin_val())/self.get_begin_val()
 
     def cal_bi_cnt(self):
+        """
+        计算线段中的笔的数量
+        """
         return self.end_bi.idx-self.begin_bi.idx+1
 
     def clear_zs_lst(self):
+        """
+        清空线段的中枢列表
+        """
         self.zs_lst = []
 
     def _low(self):
+        """
+        获取线段的最低点
+        """
         return self.end_bi.get_end_klu().low if self.is_down() else self.begin_bi.get_begin_klu().low
 
     def _high(self):
+        """
+        获取线段的最高点
+        """
         return self.end_bi.get_end_klu().high if self.is_up() else self.begin_bi.get_begin_klu().high
 
     def is_down(self):
+        """
+        判断线段是否是下降的
+        """
         return self.dir == BI_DIR.DOWN
 
     def is_up(self):
+        """
+        判断线段是否是上升的
+        """
         return self.dir == BI_DIR.UP
 
     def get_end_val(self):
+        """
+        线段的结束
+        """
         return self.end_bi.get_end_val()
 
     def get_begin_val(self):
+        """
+        线段的开始值
+        @return:
+        """
         return self.begin_bi.get_begin_val()
 
     def amp(self):
+        """
+        线段的振幅
+        """
         return abs(self.get_end_val() - self.get_begin_val())
 
     def get_end_klu(self) -> CKLine_Unit:
+        """
+        线段的结束的K线单元
+        @return:
+        """
         return self.end_bi.get_end_klu()
 
     def get_begin_klu(self) -> CKLine_Unit:
+        """
+        线段的开始的K线单元
+        @return:
+        """
         return self.begin_bi.get_begin_klu()
 
     def get_klu_cnt(self):
+        """
+        线段中的K线单元数量
+        """
         return self.get_end_klu().idx - self.get_begin_klu().idx + 1
 
     def cal_macd_metric(self, macd_algo, is_reverse):
+        """
+        根据给定的MACD算法（斜率或振幅）计算MACD指标
+        """
         if macd_algo == MACD_ALGO.SLOPE:
             return self.cal_macd_slope()
         elif macd_algo == MACD_ALGO.AMP:
@@ -112,6 +174,9 @@ class CSeg(Generic[LINE_TYPE]):
             raise CChanException(f"unsupport macd_algo={macd_algo} of Seg, should be one of slope/amp", ErrCode.PARA_ERROR)
 
     def cal_macd_slope(self):
+        """
+        计算线段的MACD斜率
+        """
         begin_klu = self.get_begin_klu()
         end_klu = self.get_end_klu()
         if self.is_up():
@@ -120,6 +185,9 @@ class CSeg(Generic[LINE_TYPE]):
             return (begin_klu.high - end_klu.low)/begin_klu.high/(end_klu.idx - begin_klu.idx + 1)
 
     def cal_macd_amp(self):
+        """
+        计算线段的MACD振幅
+        """
         begin_klu = self.get_begin_klu()
         end_klu = self.get_end_klu()
         if self.is_down():
@@ -128,6 +196,9 @@ class CSeg(Generic[LINE_TYPE]):
             return (end_klu.high-begin_klu.low)/begin_klu.low
 
     def update_bi_list(self, bi_lst, idx1, idx2):
+        """
+        更新线段的笔列表，并设置支持和阻力趋势线
+        """
         for bi_idx in range(idx1, idx2+1):
             bi_lst[bi_idx].parent_seg = self
             self.bi_list.append(bi_lst[bi_idx])
@@ -136,10 +207,19 @@ class CSeg(Generic[LINE_TYPE]):
             self.resistance_trend_line = CTrendLine(self.bi_list, TREND_LINE_SIDE.OUTSIDE)
 
     def get_first_multi_bi_zs(self):
+        """
+        线段中的第一个多笔中枢
+        """
         return next((zs for zs in self.zs_lst if not zs.is_one_bi_zs()), None)
 
     def get_final_multi_bi_zs(self):
+        """
+        线段中的最后一个多笔中枢
+        """
         return next((zs for zs in self.zs_lst[::-1] if not zs.is_one_bi_zs()), None)
 
     def get_multi_bi_zs_cnt(self):
+        """
+        线段中的多笔中枢数量
+        """
         return sum(not zs.is_one_bi_zs() for zs in self.zs_lst)

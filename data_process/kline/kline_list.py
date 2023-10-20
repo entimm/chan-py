@@ -16,6 +16,7 @@ from .kline_unit import CKLine_Unit
 
 
 def get_seglist_instance(seg_config: CSegConfig, lv) -> CSegListComm:
+    """根据配置返回相应的线段列表实例"""
     if seg_config.seg_algo == "chan":
         from data_process.seg.seg_list_chan import CSegListChan
         return CSegListChan(seg_config, lv)
@@ -63,6 +64,7 @@ class CKLine_List:
         return len(self.lst)
 
     def cal_seg_and_zs(self):
+        """计算线段和中枢"""
         if not self.step_calculation:
             self.bi_list.try_add_virtual_bi(self.lst[-1])
         cal_seg(self.bi_list, self.seg_list)
@@ -80,9 +82,11 @@ class CKLine_List:
         self.bs_point_lst.cal(self.bi_list, self.seg_list)  # 再算笔买卖点
 
     def need_cal_step_by_step(self):
+        """判断是否需要逐步计算"""
         return self.config.triger_step
 
     def add_single_klu(self, klu: CKLine_Unit):
+        """添加单个K线单位到K线列表"""
         klu.set_metric(self.metric_model_lst)
         if len(self.lst) == 0:
             self.lst.append(CKLine(klu, idx=0))
@@ -98,15 +102,18 @@ class CKLine_List:
                 self.cal_seg_and_zs()
 
     def klu_iter(self, klc_begin_idx=0):
+        """迭代K线单位"""
         for klc in self.lst[klc_begin_idx:]:
             yield from klc.lst
 
     def update_klc_in_bi(self):
+        """更新每一笔中的K线列表"""
         for bi in self.bi_list:
             bi.set_klc_lst(self[bi.begin_klc.idx:bi.end_klc.idx+1])
 
 
 def cal_seg(bi_list, seg_list):
+    """计算线段"""
     seg_list.update(bi_list)
     # 计算每一笔属于哪个线段
     bi_seg_idx_dict = {}
@@ -118,6 +125,7 @@ def cal_seg(bi_list, seg_list):
 
 
 def update_zs_in_seg(bi_list, seg_list, zs_list):
+    """更新线段中的中枢"""
     for seg in seg_list:
         seg.clear_zs_lst()
         for zs in zs_list:

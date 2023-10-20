@@ -6,6 +6,9 @@ from .seg_list_comm import CSegListComm
 
 
 def situation1(cur_bi, next_bi, pre_bi):
+    """
+    用于判断给定的笔是否满足特定的线段确定性条件
+    """
     if cur_bi.is_down() and cur_bi._low() > pre_bi._low():
         if next_bi._high() < cur_bi._high() and next_bi._low() < cur_bi._low():
             return True
@@ -16,6 +19,9 @@ def situation1(cur_bi, next_bi, pre_bi):
 
 
 def situation2(cur_bi, next_bi, pre_bi):
+    """
+    用于判断给定的笔是否满足特定的线段确定性条件
+    """
     if cur_bi.is_down() and cur_bi._low() < pre_bi._low():
         if next_bi._high() < cur_bi._high() and next_bi._low() < pre_bi._low():
             return True
@@ -28,19 +34,28 @@ def situation2(cur_bi, next_bi, pre_bi):
 class CSegListDYH(CSegListComm):
     def __init__(self, seg_config=CSegConfig(), lv=SEG_TYPE.BI):
         super(CSegListDYH, self).__init__(seg_config=seg_config, lv=lv)
+        # `sure_seg_update_end`: 一个标志，表示是否更新确定线段的结束
         self.sure_seg_update_end = False
 
     def update(self, bi_lst: CBiList):
         self.do_init()
+        # 接着调用`cal_bi_sure`方法计算确定的线段
         self.cal_bi_sure(bi_lst)
+        # 调用`try_update_last_seg`方法尝试更新最后一个线段
         self.try_update_last_seg(bi_lst)
+        # 如果存在左侧笔的突破，调用`cal_bi_unsure`方法
         if self.left_bi_break(bi_lst):
             self.cal_bi_unsure(bi_lst)
+        # 收集剩余的线段
         self.collect_left_seg(bi_lst)
 
     def cal_bi_sure(self, bi_lst):
+        """
+        计算确定的线段
+        """
         BI_LEN = len(bi_lst)
         next_begin_bi = bi_lst[0]
+        # 遍历给定的笔列表，根据笔的方向和最后一个线段的方向，确定是否需要更新峰值笔或添加新的线段
         for idx, bi in enumerate(bi_lst):
             if idx + 2 >= BI_LEN or idx < 2:
                 continue
@@ -55,11 +70,16 @@ class CSegListDYH(CSegListComm):
                 if idx != BI_LEN-1:
                     next_begin_bi = bi_lst[idx+1]
                     continue
+            # 使用`situation1`和`situation2`函数来判断线段的确定性
             if (len(self) == 0 or bi.idx - self[-1].end_bi.idx >= 4) and (situation1(bi, bi_lst[idx + 2], bi_lst[idx - 2]) or situation2(bi, bi_lst[idx + 2], bi_lst[idx - 2])):
                 self.add_new_seg(bi_lst, idx-1)
                 next_begin_bi = bi
 
     def cal_bi_unsure(self, bi_lst: CBiList):
+        """
+        计算不确定的线段
+        根据最后一个线段的方向和后续的笔，确定是否需要添加新的不确定线段
+        """
         if len(self) == 0:
             return
         last_seg_dir = self[-1].end_bi.dir
@@ -77,6 +97,10 @@ class CSegListDYH(CSegListComm):
             self.add_new_seg(bi_lst, end_bi.idx, is_sure=False)
 
     def try_update_last_seg(self, bi_lst: CBiList):
+        """
+        尝试更新最后一个线段
+        根据最后一个线段的方向和后续的笔，确定是否需要更新最后一个线段的结束笔
+        """
         if len(self) == 0:
             return
         last_bi = self[-1].end_bi
