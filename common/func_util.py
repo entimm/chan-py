@@ -1,5 +1,5 @@
-from common.const import KL_TYPE
-from common.ctime import CTime
+from common.const import LvType
+from common.time import Time
 
 
 def str2float(s):
@@ -8,8 +8,10 @@ def str2float(s):
     except ValueError:
         return 0.0
 
-def kltype_lt_day(_type):
-    return _type in [KL_TYPE.K_1M, KL_TYPE.K_5M, KL_TYPE.K_15M, KL_TYPE.K_30M, KL_TYPE.K_60M]
+
+def kl_type_lt_day(_type):
+    return _type in [LvType.K_1M, LvType.K_5M, LvType.K_15M, LvType.K_30M, LvType.K_60M]
+
 
 def parse_normal_date_str(date_str):
     # 20210902113000000
@@ -34,7 +36,7 @@ def parse_normal_date_str(date_str):
     else:
         raise Exception(f"unknown time column:{date_str}")
 
-    return CTime(year, month, day, hour, minute)
+    return Time(year, month, day, hour, minute)
 
 
 def create_item_dict(data, column_name):

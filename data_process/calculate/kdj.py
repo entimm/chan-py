@@ -1,18 +1,18 @@
-class KDJ_Item:
+class KdjItem:
     def __init__(self, k, d, j):
         self.k = k
         self.d = d
         self.j = j
 
 
-class KDJ:
+class Kdj:
     def __init__(self, period: int = 9):
-        super(KDJ, self).__init__()
+        super(Kdj, self).__init__()
         self.arr = []
         self.period = period
-        self.pre_kdj = KDJ_Item(50, 50, 50)
+        self.pre_kdj = KdjItem(50, 50, 50)
 
-    def add(self, high, low, close) -> KDJ_Item:
+    def add(self, high, low, close) -> KdjItem:
         self.arr.append({
             'high': high,
             'low': low,
@@ -28,7 +28,7 @@ class KDJ:
         cur_k = 2 / 3 * self.pre_kdj.k + 1 / 3 * rsv
         cur_d = 2 / 3 * self.pre_kdj.d + 1 / 3 * cur_k
         cur_j = 3 * cur_k - 2 * cur_d
-        cur_kdj = KDJ_Item(cur_k, cur_d, cur_j)
+        cur_kdj = KdjItem(cur_k, cur_d, cur_j)
         self.pre_kdj = cur_kdj
 
         return cur_kdj

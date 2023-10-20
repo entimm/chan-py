@@ -1,5 +1,5 @@
-from data_process.common.cenum import FX_CHECK_METHOD
-from data_process.common.chan_exception import CChanException, ErrCode
+from data_process.common.cenum import FxCheckMethod
+from data_process.common.chan_exception import ChanException, ErrCode
 
 """
 - bi_algo: 笔算法，默认为 normal
@@ -16,7 +16,7 @@ from data_process.common.chan_exception import CChanException, ErrCode
 """
 
 
-class CBiConfig:
+class BiConfig:
     def __init__(
             self,
             bi_algo="normal",
@@ -29,15 +29,15 @@ class CBiConfig:
         self.is_strict = is_strict
 
         bi_fx_check_values = {
-            "strict": FX_CHECK_METHOD.STRICT,
-            "loss": FX_CHECK_METHOD.LOSS,
-            "half": FX_CHECK_METHOD.HALF,
-            "totally": FX_CHECK_METHOD.TOTALLY
+            "strict": FxCheckMethod.STRICT,
+            "loss": FxCheckMethod.LOSS,
+            "half": FxCheckMethod.HALF,
+            "totally": FxCheckMethod.TOTALLY
         }
         if bi_fx_check in bi_fx_check_values:
             self.bi_fx_check = bi_fx_check_values[bi_fx_check]
         else:
-            raise CChanException(f"unknown bi_fx_check={bi_fx_check}", ErrCode.PARA_ERROR)
+            raise ChanException(f"unknown bi_fx_check={bi_fx_check}", ErrCode.PARA_ERROR)
 
         self.gap_as_kl = gap_as_kl
         self.bi_end_is_peak = bi_end_is_peak

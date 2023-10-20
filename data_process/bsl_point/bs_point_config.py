@@ -1,6 +1,6 @@
 from typing import Dict, List, Optional
 
-from data_process.common.cenum import BSP_TYPE, MACD_ALGO
+from data_process.common.cenum import BspType, MacdAlgo
 from data_process.common.func_util import _parse_inf
 
 """
@@ -38,16 +38,16 @@ from data_process.common.func_util import _parse_inf
 """
 
 
-class CBSPointConfig:
+class BsPointConfig:
     def __init__(self, **args):
-        self.b_conf = CPointConfig(**args)
-        self.s_conf = CPointConfig(**args)
+        self.b_conf = PointConfig(**args)
+        self.s_conf = PointConfig(**args)
 
-    def GetBSConfig(self, is_buy):
+    def get_bs_config(self, is_buy):
         return self.b_conf if is_buy else self.s_conf
 
 
-class CPointConfig:
+class PointConfig:
     def __init__(self,
                  divergence_rate,
                  min_zs_cnt,
@@ -68,10 +68,10 @@ class CPointConfig:
         self.bsp1_only_multibi_zs = bsp1_only_multibi_zs
         self.max_bs2_rate = max_bs2_rate
         assert self.max_bs2_rate <= 1
-        self.SetMacdAlgo(macd_algo)
+        self.set_macd_algo(macd_algo)
         self.bs1_peak = bs1_peak
         self.tmp_target_types = bs_type
-        self.target_types: List[BSP_TYPE] = []
+        self.target_types: List[BspType] = []
         self.bsp2_follow_1 = bsp2_follow_1
         self.bsp3_follow_1 = bsp3_follow_1
         self.bsp3_peak = bsp3_peak
@@ -80,33 +80,33 @@ class CPointConfig:
         self.strict_bsp3 = strict_bsp3
 
     def parse_target_type(self):
-        _d: Dict[str, BSP_TYPE] = {x.value: x for x in BSP_TYPE}
+        _d: Dict[str, BspType] = {x.value: x for x in BspType}
         if isinstance(self.tmp_target_types, str):
             self.tmp_target_types = [t.strip() for t in self.tmp_target_types.split(",")]
         for target_t in self.tmp_target_types:
             assert target_t in ['1', '2', '3a', '2s', '1p', '3b']
         self.target_types = [_d[_type] for _type in self.tmp_target_types]
 
-    def SetMacdAlgo(self, macd_algo):
+    def set_macd_algo(self, macd_algo):
         _d = {
-            "area": MACD_ALGO.AREA,
-            "peak": MACD_ALGO.PEAK,
-            "full_area": MACD_ALGO.FULL_AREA,
-            "diff": MACD_ALGO.DIFF,
-            "slope": MACD_ALGO.SLOPE,
-            "amp": MACD_ALGO.AMP,
-            "amount": MACD_ALGO.AMOUNT,
-            "volumn": MACD_ALGO.VOLUMN,
-            "amount_avg": MACD_ALGO.AMOUNT_AVG,
-            "volumn_avg": MACD_ALGO.VOLUMN_AVG,
-            "turnrate_avg": MACD_ALGO.AMOUNT_AVG,
-            "rsi": MACD_ALGO.RSI,
+            "area": MacdAlgo.AREA,
+            "peak": MacdAlgo.PEAK,
+            "full_area": MacdAlgo.FULL_AREA,
+            "diff": MacdAlgo.DIFF,
+            "slope": MacdAlgo.SLOPE,
+            "amp": MacdAlgo.AMP,
+            "amount": MacdAlgo.AMOUNT,
+            "volumn": MacdAlgo.VOLUMN,
+            "amount_avg": MacdAlgo.AMOUNT_AVG,
+            "volumn_avg": MacdAlgo.VOLUMN_AVG,
+            "turnrate_avg": MacdAlgo.AMOUNT_AVG,
+            "rsi": MacdAlgo.RSI,
         }
         self.macd_algo = _d[macd_algo]
 
     def set(self, k, v):
         v = _parse_inf(v)
         if k == "macd_algo":
-            self.SetMacdAlgo(v)
+            self.set_macd_algo(v)
         else:
             exec(f"self.{k} = {v}")

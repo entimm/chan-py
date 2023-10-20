@@ -1,7 +1,7 @@
 from datetime import datetime
 
 
-class CTime:
+class Time:
     def __init__(self, year, month, day, hour, minute, second=0, auto=True):
         self.year = year
         self.month = month
@@ -24,11 +24,11 @@ class CTime:
         else:
             return f"{self.year:04}/{self.month:02}/{self.day:02} {self.hour:02}:{self.minute:02}"
 
-    def toDateStr(self, splt=''):
+    def to_date_str(self, splt=''):
         return f"{self.year:04}{splt}{self.month:02}{splt}{self.day:02}"
 
-    def toDate(self):
-        return CTime(self.year, self.month, self.day, 0, 0, auto=False)
+    def to_date(self):
+        return Time(self.year, self.month, self.day, 0, 0, auto=False)
 
     def set_timestamp(self):
         if self.hour == 0 and self.minute == 0 and self.auto:

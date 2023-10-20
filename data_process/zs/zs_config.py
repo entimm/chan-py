@@ -8,7 +8,7 @@
   - zs_algo: 中枢算法normal/over_seg（段内中枢和跨段中枢，具体参见[中枢算法](#中枢算法)章节），默认为normal
 """
 
-class CZSConfig:
+class ZsConfig:
     def __init__(self, need_combine=True, zs_combine_mode="zs", one_bi_zs=False, zs_algo="normal"):
         self.need_combine = need_combine
         self.zs_combine_mode = zs_combine_mode

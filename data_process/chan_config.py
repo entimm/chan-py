@@ -1,18 +1,18 @@
 from typing import List
 
-from data_process.bi.bi_config import CBiConfig
-from data_process.bsl_point.bs_point_config import CBSPointConfig
-from data_process.common.cenum import TREND_TYPE
-from data_process.common.chan_exception import CChanException, ErrCode
+from data_process.bi.bi_config import BiConfig
+from data_process.bsl_point.bs_point_config import BsPointConfig
+from data_process.common.cenum import TrendType
+from data_process.common.chan_exception import ChanException, ErrCode
 from data_process.common.func_util import _parse_inf
 from data_process.calculate.boll import BollModel
-from data_process.calculate.demark import CDemarkEngine
-from data_process.calculate.kdj import KDJ
-from data_process.calculate.macd import CMACD
-from data_process.calculate.rsi import RSI
-from data_process.calculate.trend_model import CTrendModel
-from data_process.seg.seg_config import CSegConfig
-from data_process.zs.zs_config import CZSConfig
+from data_process.calculate.demark import DemarkEngine
+from data_process.calculate.kdj import Kdj
+from data_process.calculate.macd import Macd
+from data_process.calculate.rsi import Rsi
+from data_process.calculate.trend_model import TrendModel
+from data_process.seg.seg_config import SegConfig
+from data_process.zs.zs_config import ZsConfig
 
 """
 - mean_metrics: 均线计算周期（用于生成特征及绘图时使用），默认为空[]
@@ -48,12 +48,12 @@ from data_process.zs.zs_config import CZSConfig
 - auto_skip_illegal_sub_lv: 如果获取次级别数据失败，自动删除该级别（比如指数数据一般不提供分钟线），默认为 False
 """
 
-class CChanConfig:
+class ChanConfig:
     def __init__(self, conf=None):
         if conf is None:
             conf = {}
         conf = ConfigWithCheck(conf)
-        self.bi_conf = CBiConfig(
+        self.bi_conf = BiConfig(
             bi_algo=conf.get("bi_algo", "normal"),
             is_strict=conf.get("bi_strict", True),
             bi_fx_check=conf.get("bi_fx_check", "strict"),
@@ -61,11 +61,11 @@ class CChanConfig:
             bi_end_is_peak=conf.get('bi_end_is_peak', True),
 
         )
-        self.seg_conf = CSegConfig(
+        self.seg_conf = SegConfig(
             seg_algo=conf.get("seg_algo", "chan"),
             left_method=conf.get("left_seg_method", "peak"),
         )
-        self.zs_conf = CZSConfig(
+        self.zs_conf = ZsConfig(
             need_combine=conf.get("zs_combine", True),
             zs_combine_mode=conf.get("zs_combine_mode", "zs"),
             one_bi_zs=conf.get("one_bi_zs", False),
@@ -105,22 +105,22 @@ class CChanConfig:
 
         conf.check()
 
-    def GetMetricModel(self):
-        res: List[CMACD | CTrendModel | BollModel | CDemarkEngine | RSI | KDJ] = [
-            CMACD(
+    def get_metric_model(self):
+        res: List[Macd | TrendModel | BollModel | DemarkEngine | Rsi | Kdj] = [
+            Macd(
                 fastperiod=self.macd_config['fast'],
                 slowperiod=self.macd_config['slow'],
                 signalperiod=self.macd_config['signal'],
             )
         ]
-        res.extend(CTrendModel(TREND_TYPE.MEAN, mean_T) for mean_T in self.mean_metrics)
+        res.extend(TrendModel(TrendType.MEAN, mean_T) for mean_T in self.mean_metrics)
 
         for trend_T in self.trend_metrics:
-            res.append(CTrendModel(TREND_TYPE.MAX, trend_T))
-            res.append(CTrendModel(TREND_TYPE.MIN, trend_T))
+            res.append(TrendModel(TrendType.MAX, trend_T))
+            res.append(TrendModel(TrendType.MIN, trend_T))
         res.append(BollModel(self.boll_n))
         if self.cal_demark:
-            res.append(CDemarkEngine(
+            res.append(DemarkEngine(
                 demark_len=self.demark_config['demark_len'],
                 setup_bias=self.demark_config['setup_bias'],
                 countdown_bias=self.demark_config['countdown_bias'],
@@ -130,9 +130,9 @@ class CChanConfig:
                 countdown_cmp2close=self.demark_config['countdown_cmp2close'],
             ))
         if self.cal_rsi:
-            res.append(RSI(self.rsi_cycle))
+            res.append(Rsi(self.rsi_cycle))
         if self.cal_kdj:
-            res.append(KDJ(self.kdj_cycle))
+            res.append(Kdj(self.kdj_cycle))
         return res
 
     def set_bsp_config(self, conf):
@@ -152,9 +152,9 @@ class CChanConfig:
             "strict_bsp3": False,
             }
         args = {para: conf.get(para, default_value) for para, default_value in para_dict.items()}
-        self.bs_point_conf = CBSPointConfig(**args)
+        self.bs_point_conf = BsPointConfig(**args)
 
-        self.seg_bs_point_conf = CBSPointConfig(**args)
+        self.seg_bs_point_conf = BsPointConfig(**args)
         self.seg_bs_point_conf.b_conf.set("macd_algo", "slope")
         self.seg_bs_point_conf.s_conf.set("macd_algo", "slope")
         self.seg_bs_point_conf.b_conf.set("bsp1_only_multibi_zs", False)
@@ -184,7 +184,7 @@ class CChanConfig:
                 exec(f"self.bs_point_conf.b_conf.set({k}, {v})")
                 exec(f"self.bs_point_conf.s_conf.set({k}, {v})")
             else:
-                raise CChanException(f"unknown para = {k}", ErrCode.PARA_ERROR)
+                raise ChanException(f"unknown para = {k}", ErrCode.PARA_ERROR)
         self.bs_point_conf.b_conf.parse_target_type()
         self.bs_point_conf.s_conf.parse_target_type()
         self.seg_bs_point_conf.b_conf.parse_target_type()
@@ -212,4 +212,4 @@ class ConfigWithCheck:
     def check(self):
         if len(self.conf) > 0:
             invalid_key_lst = ",".join(list(self.conf.keys()))
-            raise CChanException(f"invalid CChanConfig: {invalid_key_lst}", ErrCode.PARA_ERROR)
+            raise ChanException(f"invalid CChanConfig: {invalid_key_lst}", ErrCode.PARA_ERROR)

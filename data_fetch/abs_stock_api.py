@@ -10,14 +10,14 @@ class AbsStockApi:
         self.begin_date = begin_date
         self.end_date = end_date
         self.autype = autype
-        self.SetBasciInfo()
+        self.set_base_info()
 
     @abc.abstractmethod
     def get_kl_data(self) -> Iterable:
         pass
 
     @classmethod
-    def SetBasciInfo(self):
+    def set_base_info(self):
         pass
 
     @classmethod

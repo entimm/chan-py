@@ -2,7 +2,7 @@ import inspect
 import types
 
 
-class make_cache:
+class MakeCache:
     def __init__(self, func):
         self.func = func
 

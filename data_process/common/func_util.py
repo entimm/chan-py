@@ -1,26 +1,26 @@
-from .cenum import BI_DIR
-from common.const import KL_TYPE
+from .cenum import BiDir
+from common.const import LvType
 
 
 
 
-def kltype_lte_day(_type):
-    return _type in [KL_TYPE.K_1M, KL_TYPE.K_5M, KL_TYPE.K_15M, KL_TYPE.K_30M, KL_TYPE.K_60M, KL_TYPE.K_DAY]
+def kl_type_lte_day(_type):
+    return _type in [LvType.K_1M, LvType.K_5M, LvType.K_15M, LvType.K_30M, LvType.K_60M, LvType.K_DAY]
 
 
-def check_kltype_order(type_list: list):
+def check_kl_type_order(type_list: list):
     _dict = {
-        KL_TYPE.K_1M: 1,
-        KL_TYPE.K_3M: 2,
-        KL_TYPE.K_5M: 3,
-        KL_TYPE.K_15M: 4,
-        KL_TYPE.K_30M: 5,
-        KL_TYPE.K_60M: 6,
-        KL_TYPE.K_DAY: 7,
-        KL_TYPE.K_WEEK: 8,
-        KL_TYPE.K_MON: 9,
-        KL_TYPE.K_QUARTER: 10,
-        KL_TYPE.K_YEAR: 11,
+        LvType.K_1M: 1,
+        LvType.K_3M: 2,
+        LvType.K_5M: 3,
+        LvType.K_15M: 4,
+        LvType.K_30M: 5,
+        LvType.K_60M: 6,
+        LvType.K_DAY: 7,
+        LvType.K_WEEK: 8,
+        LvType.K_MON: 9,
+        LvType.K_QUARTER: 10,
+        LvType.K_YEAR: 11,
     }
     last_lv = float("inf")
     for kl_type in type_list:
@@ -30,7 +30,7 @@ def check_kltype_order(type_list: list):
 
 
 def revert_bi_dir(dir):
-    return BI_DIR.DOWN if dir == BI_DIR.UP else BI_DIR.UP
+    return BiDir.DOWN if dir == BiDir.UP else BiDir.UP
 
 
 def has_overlap(l1, h1, l2, h2, equal=False):

@@ -2,13 +2,13 @@ import random
 import numpy as np
 from datetime import datetime, timedelta
 
-from common.const import AUTYPE, DATA_FIELD, KL_TYPE
+from common.const import AuType, DataField, LvType
 from common.func_util import parse_normal_date_str
 from data_fetch.abs_stock_api import AbsStockApi
 
 
 class GenerateFetcher(AbsStockApi):
-    def __init__(self, code, k_type=KL_TYPE.K_DAY, begin_date=None, end_date=None, autype=AUTYPE.QFQ):
+    def __init__(self, code, k_type=LvType.K_DAY, begin_date=None, end_date=None, autype=AuType.QFQ):
         super(GenerateFetcher, self).__init__(code, k_type, begin_date, end_date, autype)
 
 
@@ -51,12 +51,12 @@ class GenerateFetcher(AbsStockApi):
             date = (datetime(2000, 1, 1) + timedelta(i)).strftime('%Y-%m-%d')
 
             data_dict = {
-                DATA_FIELD.FIELD_TIME: parse_normal_date_str(date),
-                DATA_FIELD.FIELD_OPEN: open_price,
-                DATA_FIELD.FIELD_HIGH: high_price,
-                DATA_FIELD.FIELD_LOW: low_price,
-                DATA_FIELD.FIELD_CLOSE: close_price,
-                DATA_FIELD.FIELD_VOLUME: random.uniform(30, 100)
+                DataField.FIELD_TIME: parse_normal_date_str(date),
+                DataField.FIELD_OPEN: open_price,
+                DataField.FIELD_HIGH: high_price,
+                DataField.FIELD_LOW: low_price,
+                DataField.FIELD_CLOSE: close_price,
+                DataField.FIELD_VOLUME: random.uniform(30, 100)
             }
 
             yield data_dict, False

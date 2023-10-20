@@ -1,28 +1,28 @@
 from enum import Enum, auto
 from typing import Literal
 
-from common.const import DATA_FIELD
+from common.const import DataField
 
 
-class KLINE_DIR(Enum):
+class KlineDir(Enum):
     UP = auto()
     DOWN = auto()
     COMBINE = auto()
     INCLUDED = auto()
 
 
-class FX_TYPE(Enum):
+class FxType(Enum):
     BOTTOM = auto()
     TOP = auto()
     UNKNOWN = auto()
 
 
-class BI_DIR(Enum):
+class BiDir(Enum):
     UP = auto()
     DOWN = auto()
 
 
-class BI_TYPE(Enum):
+class BiType(Enum):
     UNKNOWN = auto()
     STRICT = auto()
     SUB_VALUE = auto()  # 次高低点成笔
@@ -36,7 +36,7 @@ class BI_TYPE(Enum):
 BSP_MAIN_TYPE = Literal['1', '2', '3']
 
 
-class BSP_TYPE(Enum):
+class BspType(Enum):
     T1 = '1'
     T1P = '1p'
     T2 = '2'
@@ -48,35 +48,35 @@ class BSP_TYPE(Enum):
         return self.value[0]  # type: ignore
 
 
-class TREND_TYPE(Enum):
+class TrendType(Enum):
     MEAN = "mean"
     MAX = "max"
     MIN = "min"
 
 
-class TREND_LINE_SIDE(Enum):
+class TrendLineSide(Enum):
     INSIDE = auto()
     OUTSIDE = auto()
 
 
-class LEFT_SEG_METHOD(Enum):
+class LeftSegMethod(Enum):
     ALL = auto()
     PEAK = auto()
 
 
-class FX_CHECK_METHOD(Enum):
+class FxCheckMethod(Enum):
     STRICT = auto()
     LOSS = auto()
     HALF = auto()
     TOTALLY = auto()
 
 
-class SEG_TYPE(Enum):
+class SegType(Enum):
     BI = auto()
     SEG = auto()
 
 
-class MACD_ALGO(Enum):
+class MacdAlgo(Enum):
     AREA = auto()
     PEAK = auto()
     FULL_AREA = auto()
@@ -91,4 +91,4 @@ class MACD_ALGO(Enum):
     RSI = auto()
 
 
-TRADE_INFO_LST = [DATA_FIELD.FIELD_VOLUME, DATA_FIELD.FIELD_TURNOVER, DATA_FIELD.FIELD_TURNRATE]
+TRADE_INFO_LST = [DataField.FIELD_VOLUME, DataField.FIELD_TURNOVER, DataField.FIELD_TURNRATE]

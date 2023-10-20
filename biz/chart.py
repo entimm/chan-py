@@ -1,21 +1,21 @@
-from common.const import AUTYPE
-from data_fetch.manager import DATA_SRC
-from data_process.chan import CChan
-from data_process.chan_chart_meta import CChanChartMeta
-from data_process.chan_config import CChanConfig
+from common.const import AuType
+from data_fetch.manager import DataSrc
+from data_process.chan import Chan
+from data_process.chan_chart_meta import ChanChartMeta
+from data_process.chan_config import ChanConfig
 
 
 def make_chan_data(ticker, start, end, lv):
-    chan = CChan(
+    chan = Chan(
         code=ticker,
         begin_time=start,
         end_time=end,
 
-        data_src=DATA_SRC.LOCAL,
-        autype=AUTYPE.QFQ,
+        data_src=DataSrc.LOCAL,
+        autype=AuType.QFQ,
         lv_list=[lv],
 
-        config=CChanConfig({
+        config=ChanConfig({
             "bi_strict": True,
             "divergence_rate": float("inf"),
             "bsp2_follow_1": False,
@@ -36,10 +36,9 @@ def make_chan_data(ticker, start, end, lv):
 
 
 def get_json_data(chan_data):
-    meta = CChanChartMeta(chan_data)
+    meta = ChanChartMeta(chan_data)
     datetick = meta.datetick
 
-    # data.lst
     kline_units_data = [{
         'timestamp': item.time.to_str(),
         'open': item.open,
@@ -49,60 +48,51 @@ def get_json_data(chan_data):
         'volume': item.trade_info.metric['volume']
     } for item in meta.klu_iter()]
 
-    # merge_kline
     merge_kline_data = [{
         'begin': {'timestamp': datetick[item.begin_idx], 'value': item.low},
         'end': {'timestamp': datetick[item.end_idx], 'value': item.high}
     } for item in meta.klc_list]
 
-    # data.bi_list
     bi_list_data = [{
         'is_sure': item.is_sure,
         'begin': {'timestamp': datetick[item.begin_x], 'value': item.begin_y},
         'end': {'timestamp': datetick[item.end_x], 'value': item.end_y},
     } for item in meta.bi_list]
 
-    # data.seg_list
     seg_list_data = [{
         'is_sure': item.is_sure,
         'begin': {'timestamp': datetick[item.begin_x], 'value': item.begin_y},
         'end': {'timestamp': datetick[item.end_x], 'value': item.end_y},
     } for item in meta.seg_list]
 
-    # segseg_list
     segseg_list_data = [{
         'is_sure': item.is_sure,
         'begin': {'timestamp': datetick[item.begin_x], 'value': item.begin_y},
         'end': {'timestamp': datetick[item.end_x], 'value': item.end_y},
     } for item in meta.segseg_list]
 
-    # data.zs_list
     zs_list_data = [{
         'is_sure': item.is_sure,
         'begin': {'timestamp': datetick[item.begin], 'value': item.low},
         'end': {'timestamp': datetick[item.end], 'value': item.high},
     } for item in meta.zs_lst]
 
-    # segzs_list
     segzs_list_data = [{
         'is_sure': item.is_sure,
         'begin': {'timestamp': datetick[item.begin], 'value': item.low},
         'end': {'timestamp': datetick[item.end], 'value': item.high},
     } for item in meta.segzs_lst]
 
-    # eigenfx_lst
     eigenfx_lst_data = [{
         'begin': {'timestamp': datetick[item['begin_x']], 'value': item['begin_y']},
         'end': {'timestamp': datetick[item['end_x']], 'value': item['end_y']},
     } for item in (eigenMeta.__dict__ for item in meta.eigenfx_lst for eigenMeta in item.ele)]
-    # eigenfxbi_lst
     eigenfxbi_lst_data = [{
         'begin': {'timestamp': datetick[item.begin_x], 'value': item.begin_y},
         'end': {'timestamp': datetick[item.end_x], 'value': item.end_y}
     } for item in meta.eigenfx_lst]
-    # bs_point_lst
+
     # bs_point_lst_data = [item for item in meta.bs_point_lst_data]
-    # seg_bsp_lst
     # seg_bsp_lst_data = [item for item in meta.seg_bsp_lst_data]
 
     return {

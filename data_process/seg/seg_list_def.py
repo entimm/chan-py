@@ -1,8 +1,8 @@
-from data_process.bi.bi_list import CBiList
-from data_process.common.cenum import SEG_TYPE
+from data_process.bi.bi_list import BiList
+from data_process.common.cenum import SegType
 
-from .seg_config import CSegConfig
-from .seg_list_comm import CSegListComm
+from .seg_config import SegConfig
+from .seg_list_comm import SegListComm
 
 
 def is_up_seg(bi, pre_bi):
@@ -19,13 +19,13 @@ def is_down_seg(bi, pre_bi):
     return bi._low() < pre_bi._low()
 
 
-class CSegListDef(CSegListComm):
-    def __init__(self, seg_config=CSegConfig(), lv=SEG_TYPE.BI):
-        super(CSegListDef, self).__init__(seg_config=seg_config, lv=lv)
+class SegListDef(SegListComm):
+    def __init__(self, seg_config=SegConfig(), lv=SegType.BI):
+        super(SegListDef, self).__init__(seg_config=seg_config, lv=lv)
         # `sure_seg_update_end`: 一个标志，表示是否更新确定线段的结束
         self.sure_seg_update_end = False
 
-    def update(self, bi_lst: CBiList):
+    def update(self, bi_lst: BiList):
         self.do_init()
         self.cal_bi_sure(bi_lst)
         self.collect_left_seg(bi_lst)

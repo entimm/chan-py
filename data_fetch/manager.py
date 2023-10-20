@@ -1,6 +1,6 @@
 from enum import Enum, auto
 
-class DATA_SRC(Enum):
+class DataSrc(Enum):
     BAO_STOCK = auto()
     CCXT = auto()
     Y_FINANCE = auto()
@@ -8,14 +8,14 @@ class DATA_SRC(Enum):
     GENERATE = auto()
 
 FETCHER_CLASSES = {
-    DATA_SRC.BAO_STOCK: "BaoStockFetcher",
-    DATA_SRC.CCXT: "CcxtFetcher",
-    DATA_SRC.Y_FINANCE: "YFinanceFetcher",
-    DATA_SRC.LOCAL: "LocalFetcher",
-    DATA_SRC.GENERATE: "GenerateFetcher",
+    DataSrc.BAO_STOCK: "BaoStockFetcher",
+    DataSrc.CCXT: "CcxtFetcher",
+    DataSrc.Y_FINANCE: "YFinanceFetcher",
+    DataSrc.LOCAL: "LocalFetcher",
+    DataSrc.GENERATE: "GenerateFetcher",
 }
 
-def GetStockAPI(src):
+def get_stock_api(src):
     if src in FETCHER_CLASSES:
         fetcher_class_name = FETCHER_CLASSES[src]
         fetcher_module = __import__(f"data_fetch.fetchers.{src.name.lower()}_fetcher", fromlist=[fetcher_class_name])

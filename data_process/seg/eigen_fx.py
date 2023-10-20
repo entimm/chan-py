@@ -1,41 +1,41 @@
 from typing import List, Optional
 
-from data_process.bi.bi import CBi
-from data_process.bi.bi_list import CBiList
-from data_process.common.cenum import BI_DIR, FX_TYPE, KLINE_DIR, SEG_TYPE
-from data_process.common.chan_exception import CChanException, ErrCode
+from data_process.bi.bi import Bi
+from data_process.bi.bi_list import BiList
+from data_process.common.cenum import BiDir, FxType, KlineDir, SegType
+from data_process.common.chan_exception import ChanException, ErrCode
 from data_process.common.func_util import revert_bi_dir
 
-from .eigen import CEigen
+from .eigen import Eigen
 
 
-class CEigenFX:
+class EigenFX:
     """
     特征序列分型
     """
-    def __init__(self, _dir: BI_DIR, exclude_included=True, lv=SEG_TYPE.BI):
+    def __init__(self, _dir: BiDir, exclude_included=True, lv=SegType.BI):
         self.lv = lv
         self.dir = _dir
-        self.lst: List[CBi] = []
+        self.lst: List[Bi] = []
 
         # 特征序列分型的三个元素
-        self.ele: List[Optional[CEigen]] = [None, None, None]
+        self.ele: List[Optional[Eigen]] = [None, None, None]
         # 布尔值，表示是否排除包含关系
         self.exclude_included = exclude_included
         # K线的方向
-        self.kl_dir = KLINE_DIR.UP if _dir == BI_DIR.UP else KLINE_DIR.DOWN
+        self.kl_dir = KlineDir.UP if _dir == BiDir.UP else KlineDir.DOWN
         # 最后的证据笔
-        self.last_evidence_bi: Optional[CBi] = None
+        self.last_evidence_bi: Optional[Bi] = None
 
-    def treat_first_ele(self, bi: CBi) -> bool:
+    def treat_first_ele(self, bi: Bi) -> bool:
         """
         处理特征序列分型的第一个元素
         返回False，表示还没有形成分形
         """
-        self.ele[0] = CEigen(bi, self.kl_dir)
+        self.ele[0] = Eigen(bi, self.kl_dir)
         return False
 
-    def treat_second_ele(self, bi: CBi) -> bool:
+    def treat_second_ele(self, bi: Bi) -> bool:
         """
         处理特征序列分型的第二个元素
         返回False，表示还没有形成分形
@@ -44,9 +44,9 @@ class CEigenFX:
         # 尝试将传入的笔`bi`与第一个元素合并
         combine_dir = self.ele[0].try_add(bi, exclude_included=self.exclude_included)
         # 如果不能合并
-        if combine_dir != KLINE_DIR.COMBINE:
+        if combine_dir != KlineDir.COMBINE:
             # 创建一个新的特征序列对象，并将其设置为特征序列分型的第二个元素
-            self.ele[1] = CEigen(bi, self.kl_dir)
+            self.ele[1] = Eigen(bi, self.kl_dir)
             # 检查前两个特征序列元素是否可能形成分型，如果不可能，则重置特征序列分型
             if (self.is_up() and self.ele[1].high < self.ele[0].high) or \
                (self.is_down() and self.ele[1].low > self.ele[0].low):
@@ -54,7 +54,7 @@ class CEigenFX:
 
         return False
 
-    def treat_third_ele(self, bi: CBi) -> bool:
+    def treat_third_ele(self, bi: Bi) -> bool:
         """
         处理特征序列分型的第三个元素
         """
@@ -65,10 +65,10 @@ class CEigenFX:
         allow_hl_equal = (1 if bi.is_down() else -1) if self.exclude_included else None
         combine_dir = self.ele[1].try_add(bi, allow_hl_equal=allow_hl_equal)
         # 如果可以合并，返回False
-        if combine_dir == KLINE_DIR.COMBINE:
+        if combine_dir == KlineDir.COMBINE:
             return False
         # 创建一个新的特征序列对象，并将其设置为特征序列分型的第三个元素
-        self.ele[2] = CEigen(bi, combine_dir)
+        self.ele[2] = Eigen(bi, combine_dir)
         # 检查是否实际突破，如果没有实际突破，则重置特征序列
         if not self.actual_break():
             return self.reset()
@@ -77,10 +77,10 @@ class CEigenFX:
 
         # 根据分形的方向返回True或False
         fx = self.ele[1].fx
-        is_fx = (self.is_up() and fx == FX_TYPE.TOP) or (self.is_down() and fx == FX_TYPE.BOTTOM)
+        is_fx = (self.is_up() and fx == FxType.TOP) or (self.is_down() and fx == FxType.BOTTOM)
         return True if is_fx else self.reset()
 
-    def add(self, bi: CBi) -> bool:  # 返回是否出现分形
+    def add(self, bi: Bi) -> bool:  # 返回是否出现分形
         """
         向特征序列分型中添加一个笔
         """
@@ -94,7 +94,7 @@ class CEigenFX:
         elif self.ele[2] is None:
             return self.treat_third_ele(bi)
         else:
-            raise CChanException(f"特征序列3个都找齐了还没处理!! 当前笔:{bi.idx},当前:{str(self)}", ErrCode.SEG_EIGEN_ERR)
+            raise ChanException(f"特征序列3个都找齐了还没处理!! 当前笔:{bi.idx},当前:{str(self)}", ErrCode.SEG_EIGEN_ERR)
 
     def reset(self):
         """
@@ -116,7 +116,7 @@ class CEigenFX:
 
         return False
 
-    def can_be_end(self, bi_lst: CBiList):
+    def can_be_end(self, bi_lst: BiList):
         """
         判断特征序列分型是否可以结束
         """
@@ -124,7 +124,7 @@ class CEigenFX:
         # 如果第二个特征序列元素有缺口，检查是否可以找到反转分型
         if self.ele[1].gap:
             assert self.ele[0] is not None
-            end_bi_idx = self.GetPeakBiIdx()
+            end_bi_idx = self.get_peak_bi_idx()
             thred_value = bi_lst[end_bi_idx].get_end_val()
             break_thred = self.ele[0].low if self.is_up() else self.ele[0].high
             return self.find_revert_fx(bi_lst, end_bi_idx+2, thred_value, break_thred)
@@ -132,18 +132,18 @@ class CEigenFX:
             return True
 
     def is_down(self):
-        return self.dir == BI_DIR.DOWN
+        return self.dir == BiDir.DOWN
 
     def is_up(self):
-        return self.dir == BI_DIR.UP
+        return self.dir == BiDir.UP
 
-    def GetPeakBiIdx(self):
+    def get_peak_bi_idx(self):
         """
         获取峰值笔的索引
         """
         assert self.ele[1] is not None
         # 返回第二个特征序列元素的峰值笔的索引
-        return self.ele[1].GetPeakBiIdx()
+        return self.ele[1].get_peak_bi_idx()
 
     def all_bi_is_sure(self):
         """
@@ -190,7 +190,7 @@ class CEigenFX:
         # 如果上述条件都不满足，返回False
         return False
 
-    def find_revert_fx(self, bi_list: CBiList, begin_idx: int, thred_value: float, break_thred: float):
+    def find_revert_fx(self, bi_list: BiList, begin_idx: int, thred_value: float, break_thred: float):
         """
         寻找反转分型
         @param bi_list:笔的列表
@@ -204,7 +204,7 @@ class CEigenFX:
         # 获取第一个笔的方向
         first_bi_dir = bi_list[begin_idx].dir  # down则是要找顶分型
         # 创建一个新的特征序列分型对象，其方向与第一个笔的方向相反
-        egien_fx = CEigenFX(revert_bi_dir(first_bi_dir), exclude_included=not COMMON_COMBINE, lv=self.lv)  # 顶分型的话要找上升线段
+        egien_fx = EigenFX(revert_bi_dir(first_bi_dir), exclude_included=not COMMON_COMBINE, lv=self.lv)  # 顶分型的话要找上升线段
         for bi in bi_list[begin_idx::2]:
             # 尝试向特征序列分型中添加笔
             if egien_fx.add(bi):

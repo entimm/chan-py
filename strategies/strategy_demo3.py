@@ -1,22 +1,22 @@
 import copy
 from typing import List
 
-from data_process.chan import CChan
-from data_process.chan_config import CChanConfig
-from common.const import AUTYPE, DATA_FIELD, KL_TYPE
-from data_fetch.manager import DATA_SRC
+from data_process.chan import Chan
+from data_process.chan_config import ChanConfig
+from common.const import AuType, DataField, LvType
+from data_fetch.manager import DataSrc
 from data_fetch.fetchers.baostock_fetcher import BaoStockFetcher
-from data_process.kline.kline_unit import CKLine_Unit
+from data_process.kline.kline_unit import Kline_Unit
 
 
-def combine_60m_klu_form_15m(klu_15m_lst: List[CKLine_Unit]) -> CKLine_Unit:
-    return CKLine_Unit(
+def combine_60m_klu_form_15m(klu_15m_lst: List[Kline_Unit]) -> Kline_Unit:
+    return Kline_Unit(
         {
-            DATA_FIELD.FIELD_TIME: klu_15m_lst[-1].time,
-            DATA_FIELD.FIELD_OPEN: klu_15m_lst[0].open,
-            DATA_FIELD.FIELD_CLOSE: klu_15m_lst[-1].close,
-            DATA_FIELD.FIELD_HIGH: max(klu.high for klu in klu_15m_lst),
-            DATA_FIELD.FIELD_LOW: min(klu.low for klu in klu_15m_lst),
+            DataField.FIELD_TIME: klu_15m_lst[-1].time,
+            DataField.FIELD_OPEN: klu_15m_lst[0].open,
+            DataField.FIELD_CLOSE: klu_15m_lst[-1].close,
+            DataField.FIELD_HIGH: max(klu.high for klu in klu_15m_lst),
+            DataField.FIELD_LOW: min(klu.low for klu in klu_15m_lst),
         }
     )
 
@@ -28,27 +28,27 @@ if __name__ == "__main__":
     code = "sz.000001"
     begin_time = "2023-09-10"
     end_time = None
-    data_src_type = DATA_SRC.BAO_STOCK
-    lv_list = [KL_TYPE.K_60M, KL_TYPE.K_15M]
+    data_src_type = DataSrc.BAO_STOCK
+    lv_list = [LvType.K_60M, LvType.K_15M]
 
-    config = CChanConfig({
+    config = ChanConfig({
         "triger_step": True,
     })
 
     # 快照
-    chan_snapshot = CChan(
+    chan_snapshot = Chan(
         code=code,
         data_src=data_src_type,
         lv_list=lv_list,
         config=config,
     )
     BaoStockFetcher.do_init()
-    data_src = BaoStockFetcher(code, k_type=KL_TYPE.K_15M, begin_date=begin_time, end_date=end_time, autype=AUTYPE.QFQ)  # 获取最小级别
+    data_src = BaoStockFetcher(code, k_type=LvType.K_15M, begin_date=begin_time, end_date=end_time, autype=AuType.QFQ)  # 获取最小级别
 
-    klu_15m_lst_tmp: List[CKLine_Unit] = []  # 存储用于合成当前60M K线的15M k线
+    klu_15m_lst_tmp: List[Kline_Unit] = []  # 存储用于合成当前60M K线的15M k线
 
     for klu_15m in data_src.get_kl_data():  # 获取单根15分钟K线
-        klu_15m = CKLine_Unit(*klu_15m)
+        klu_15m = Kline_Unit(*klu_15m)
         klu_15m_lst_tmp.append(klu_15m)
         klu_60m = combine_60m_klu_form_15m(klu_15m_lst_tmp)  # 合成60分钟K线
 
@@ -56,8 +56,8 @@ if __name__ == "__main__":
         拷贝一份chan_snapshot
         如果是用序列化方式，这里可以采用pickle.load()
         """
-        chan: CChan = copy.deepcopy(chan_snapshot)
-        chan.trigger_load({KL_TYPE.K_60M: [klu_60m], KL_TYPE.K_15M: klu_15m_lst_tmp})
+        chan: Chan = copy.deepcopy(chan_snapshot)
+        chan.trigger_load({LvType.K_60M: [klu_60m], LvType.K_15M: klu_15m_lst_tmp})
 
         """
         策略开始：

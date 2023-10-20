@@ -1,12 +1,9 @@
 from typing import Optional
 
 
-class CFeatures:
+class Features:
     def __init__(self, initFeat=None):
         self.__features = {} if initFeat is None else dict(initFeat)
-
-    def toJson(self):
-        return self.__features
 
     def __getitem__(self, k):
         return self.__features[k]

@@ -1,14 +1,14 @@
-from data_process.bi.bi_list import CBiList
-from data_process.common.cenum import BI_DIR, SEG_TYPE
+from data_process.bi.bi_list import BiList
+from data_process.common.cenum import BiDir, SegType
 
-from .eigen_fx import CEigenFX
-from .seg_config import CSegConfig
-from .seg_list_comm import CSegListComm
+from .eigen_fx import EigenFX
+from .seg_config import SegConfig
+from .seg_list_comm import SegListComm
 
 
-class CSegListChan(CSegListComm):
-    def __init__(self, seg_config=CSegConfig(), lv=SEG_TYPE.BI):
-        super(CSegListChan, self).__init__(seg_config=seg_config, lv=lv)
+class SegListChan(SegListComm):
+    def __init__(self, seg_config=SegConfig(), lv=SegType.BI):
+        super(SegListChan, self).__init__(seg_config=seg_config, lv=lv)
 
     def do_init(self):
         # 删除线段列表末尾的不确定线段
@@ -20,7 +20,7 @@ class CSegListChan(CSegListComm):
             if not self.lst[-1].eigen_fx.ele[-1].lst[-1].is_sure:
                 self.lst = self.lst[:-1]
 
-    def update(self, bi_lst: CBiList):
+    def update(self, bi_lst: BiList):
         """
         更新线段列表
         """
@@ -33,32 +33,32 @@ class CSegListChan(CSegListComm):
         # 最后，收集剩余的线段
         self.collect_left_seg(bi_lst)
 
-    def cal_seg_sure(self, bi_lst: CBiList, begin_idx: int):
+    def cal_seg_sure(self, bi_lst: BiList, begin_idx: int):
         """
         计算确定的线段
         """
-        up_eigen = CEigenFX(BI_DIR.UP, lv=self.lv)  # 上升线段下降笔
-        down_eigen = CEigenFX(BI_DIR.DOWN, lv=self.lv)  # 下降线段上升笔
+        up_eigen = EigenFX(BiDir.UP, lv=self.lv)  # 上升线段下降笔
+        down_eigen = EigenFX(BiDir.DOWN, lv=self.lv)  # 下降线段上升笔
         last_seg_dir = None if len(self) == 0 else self[-1].dir
         # 遍历给定的笔列表，根据笔的方向和最后一个线段的方向，将笔添加到相应的特征分型中
         for bi in bi_lst[begin_idx:]:
             fx_eigen = None
-            if bi.is_down() and last_seg_dir != BI_DIR.UP:
+            if bi.is_down() and last_seg_dir != BiDir.UP:
                 if up_eigen.add(bi):
                     fx_eigen = up_eigen
-            elif bi.is_up() and last_seg_dir != BI_DIR.DOWN:
+            elif bi.is_up() and last_seg_dir != BiDir.DOWN:
                 if down_eigen.add(bi):
                     fx_eigen = down_eigen
             if len(self) == 0:  # 尝试确定第一段方向，不要以谁先成为分形来决定，反例：US.EVRG
                 if up_eigen.ele[1] is not None and bi.is_down():
-                    last_seg_dir = BI_DIR.DOWN
+                    last_seg_dir = BiDir.DOWN
                     down_eigen.clear()
                 elif down_eigen.ele[1] is not None and bi.is_up():
                     up_eigen.clear()
-                    last_seg_dir = BI_DIR.UP
-                if up_eigen.ele[1] is None and last_seg_dir == BI_DIR.DOWN and bi.dir == BI_DIR.DOWN:
+                    last_seg_dir = BiDir.UP
+                if up_eigen.ele[1] is None and last_seg_dir == BiDir.DOWN and bi.dir == BiDir.DOWN:
                     last_seg_dir = None
-                elif down_eigen.ele[1] is None and last_seg_dir == BI_DIR.UP and bi.dir == BI_DIR.UP:
+                elif down_eigen.ele[1] is None and last_seg_dir == BiDir.UP and bi.dir == BiDir.UP:
                     last_seg_dir = None
 
             # 如果特征分型完成，则调用`treat_fx_eigen`方法处理该特征分型
@@ -66,12 +66,12 @@ class CSegListChan(CSegListComm):
                 self.treat_fx_eigen(fx_eigen, bi_lst)
                 break
 
-    def treat_fx_eigen(self, fx_eigen, bi_lst: CBiList):
+    def treat_fx_eigen(self, fx_eigen, bi_lst: BiList):
         """
         处理给定的特征分型
         """
         _test = fx_eigen.can_be_end(bi_lst)
-        end_bi_idx = fx_eigen.GetPeakBiIdx()
+        end_bi_idx = fx_eigen.get_peak_bi_idx()
         # 首先检查特征分型是否可以结束
         if _test in [True, None]:  # None表示反向分型找到尾部也没找到
             is_true = _test is not None  # 如果是正常结束

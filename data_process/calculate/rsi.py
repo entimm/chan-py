@@ -1,6 +1,6 @@
-class RSI:
+class Rsi:
     def __init__(self, period: int = 14):
-        super(RSI, self).__init__()
+        super(Rsi, self).__init__()
         self.close_arr = []
         self.period = period
         self.diff = []

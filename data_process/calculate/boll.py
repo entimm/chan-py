@@ -4,7 +4,7 @@ def _truncate(x):
     return x if x != 0 else 1e-7
 
 
-class BOLL_Metric:
+class BollMetric:
     def __init__(self, ma, theta):
         self.theta = _truncate(theta)
         self.UP = ma + 2*theta
@@ -18,10 +18,10 @@ class BollModel:
         self.N = N
         self.arr = []
 
-    def add(self, value) -> BOLL_Metric:
+    def add(self, value) -> BollMetric:
         self.arr.append(value)
         if len(self.arr) > self.N:
             self.arr = self.arr[-self.N:]
         ma = sum(self.arr)/len(self.arr)
         theta = sqrt(sum((x - ma) ** 2 for x in self.arr) / len(self.arr))
-        return BOLL_Metric(ma, theta)
+        return BollMetric(ma, theta)

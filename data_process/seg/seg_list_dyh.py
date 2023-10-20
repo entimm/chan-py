@@ -1,8 +1,8 @@
-from data_process.bi.bi_list import CBiList
-from data_process.common.cenum import BI_DIR, SEG_TYPE
+from data_process.bi.bi_list import BiList
+from data_process.common.cenum import BiDir, SegType
 
-from .seg_config import CSegConfig
-from .seg_list_comm import CSegListComm
+from .seg_config import SegConfig
+from .seg_list_comm import SegListComm
 
 
 def situation1(cur_bi, next_bi, pre_bi):
@@ -31,13 +31,13 @@ def situation2(cur_bi, next_bi, pre_bi):
     return False
 
 
-class CSegListDYH(CSegListComm):
-    def __init__(self, seg_config=CSegConfig(), lv=SEG_TYPE.BI):
-        super(CSegListDYH, self).__init__(seg_config=seg_config, lv=lv)
+class SegListDYH(SegListComm):
+    def __init__(self, seg_config=SegConfig(), lv=SegType.BI):
+        super(SegListDYH, self).__init__(seg_config=seg_config, lv=lv)
         # `sure_seg_update_end`: 一个标志，表示是否更新确定线段的结束
         self.sure_seg_update_end = False
 
-    def update(self, bi_lst: CBiList):
+    def update(self, bi_lst: BiList):
         self.do_init()
         # 接着调用`cal_bi_sure`方法计算确定的线段
         self.cal_bi_sure(bi_lst)
@@ -75,7 +75,7 @@ class CSegListDYH(CSegListComm):
                 self.add_new_seg(bi_lst, idx-1)
                 next_begin_bi = bi
 
-    def cal_bi_unsure(self, bi_lst: CBiList):
+    def cal_bi_unsure(self, bi_lst: BiList):
         """
         计算不确定的线段
         根据最后一个线段的方向和后续的笔，确定是否需要添加新的不确定线段
@@ -84,19 +84,19 @@ class CSegListDYH(CSegListComm):
             return
         last_seg_dir = self[-1].end_bi.dir
         end_bi = None
-        peak_value = float("inf") if last_seg_dir == BI_DIR.UP else float("-inf")
+        peak_value = float("inf") if last_seg_dir == BiDir.UP else float("-inf")
         for bi in bi_lst[self[-1].end_bi.idx+3:]:
             if bi.dir == last_seg_dir:
                 continue
-            cur_value = bi._low() if last_seg_dir == BI_DIR.UP else bi._high()
-            if (last_seg_dir == BI_DIR.UP and cur_value < peak_value) or \
-               (last_seg_dir == BI_DIR.DOWN and cur_value > peak_value):
+            cur_value = bi._low() if last_seg_dir == BiDir.UP else bi._high()
+            if (last_seg_dir == BiDir.UP and cur_value < peak_value) or \
+               (last_seg_dir == BiDir.DOWN and cur_value > peak_value):
                 end_bi = bi
                 peak_value = cur_value
         if end_bi:
             self.add_new_seg(bi_lst, end_bi.idx, is_sure=False)
 
-    def try_update_last_seg(self, bi_lst: CBiList):
+    def try_update_last_seg(self, bi_lst: BiList):
         """
         尝试更新最后一个线段
         根据最后一个线段的方向和后续的笔，确定是否需要更新最后一个线段的结束笔

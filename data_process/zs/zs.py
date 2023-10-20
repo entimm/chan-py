@@ -1,27 +1,27 @@
 from typing import Generic, List, Optional, TypeVar
 
-from data_process.bi.bi import CBi
-from data_process.bsl_point.bs_point_config import CPointConfig
-from data_process.common.chan_exception import CChanException, ErrCode
+from data_process.bi.bi import Bi
+from data_process.bsl_point.bs_point_config import PointConfig
+from data_process.common.chan_exception import ChanException, ErrCode
 from data_process.common.func_util import has_overlap
-from data_process.kline.kline_unit import CKLine_Unit
-from data_process.seg.seg import CSeg
+from data_process.kline.kline_unit import Kline_Unit
+from data_process.seg.seg import Seg
 
-LINE_TYPE = TypeVar('LINE_TYPE', CBi, "CSeg")
+LINE_TYPE = TypeVar('LINE_TYPE', Bi, "CSeg")
 
 
-class CZS(Generic[LINE_TYPE]):
+class Zs(Generic[LINE_TYPE]):
     def __init__(self, lst: Optional[List[LINE_TYPE]], is_sure=True):
         # begin/end：永远指向 klu
         # low/high: 中枢的范围
         # peak_low/peak_high: 中枢所涉及到的笔的最大值，最小值
         self.__is_sure = is_sure
-        self.__sub_zs_lst: List[CZS] = []
+        self.__sub_zs_lst: List[Zs] = []
 
         if lst is None:
             return
 
-        self.__begin: CKLine_Unit = lst[0].get_begin_klu()
+        self.__begin: Kline_Unit = lst[0].get_begin_klu()
         self.__begin_bi: LINE_TYPE = lst[0]  # 中枢内部的笔
 
         # self.__low = None
@@ -29,7 +29,7 @@ class CZS(Generic[LINE_TYPE]):
         # self.__mid = None
         self.update_zs_range(lst)
 
-        # self.__end: CKLine_Unit = None
+        # self.__end: CKline_Unit = None
         # self.__end_bi: CBi = None  # 中枢内部的笔
         self.__peak_high = float("-inf")
         self.__peak_low = float("inf")
@@ -100,8 +100,8 @@ class CZS(Generic[LINE_TYPE]):
 
     def update_zs_end(self, item):
         """更新中枢的结束部分"""
-        self.__end: CKLine_Unit = item.get_end_klu()
-        self.__end_bi: CBi = item
+        self.__end: Kline_Unit = item.get_end_klu()
+        self.__end_bi: Bi = item
         if item._low() < self.peak_low:
             self.__peak_low = item._low()
         if item._high() > self.peak_high:
@@ -115,7 +115,7 @@ class CZS(Generic[LINE_TYPE]):
         else:
             return _str
 
-    def combine(self, zs2: 'CZS', combine_mode) -> bool:
+    def combine(self, zs2: 'Zs', combine_mode) -> bool:
         """尝试合并两个中枢"""
         if zs2.is_one_bi_zs():
             return False
@@ -133,9 +133,9 @@ class CZS(Generic[LINE_TYPE]):
             else:
                 return False
         else:
-            raise CChanException(f"{combine_mode} is unsupport zs conbine mode", ErrCode.PARA_ERROR)
+            raise ChanException(f"{combine_mode} is unsupport zs conbine mode", ErrCode.PARA_ERROR)
 
-    def do_combine(self, zs2: 'CZS'):
+    def do_combine(self, zs2: 'Zs'):
         """执行合并操作"""
         if len(self.sub_zs_lst) == 0:
             self.__sub_zs_lst.append(self.make_copy())
@@ -163,11 +163,11 @@ class CZS(Generic[LINE_TYPE]):
         """判断一个笔是否在中枢的范围内"""
         return has_overlap(self.low, self.high, item._low(), item._high())
 
-    def is_inside(self, seg: CSeg):
+    def is_inside(self, seg: Seg):
         """判断一个段是否在中枢内部"""
         return seg.begin_bi.idx <= self.begin_bi.idx <= seg.end_bi.idx
 
-    def is_divergence(self, config: CPointConfig, out_bi=None):
+    def is_divergence(self, config: PointConfig, out_bi=None):
         """判断中枢是否发散"""
         if not self.end_bi_break(out_bi):  # 最后一笔必须突破中枢
             return False, None
@@ -182,7 +182,7 @@ class CZS(Generic[LINE_TYPE]):
         else:
             return out_metric <= config.divergence_rate*in_metric, out_metric/in_metric
 
-    def init_from_zs(self, zs: 'CZS'):
+    def init_from_zs(self, zs: 'Zs'):
         """从另一个中枢初始化当前中枢"""
         self.__begin = zs.begin
         self.__end = zs.end
@@ -195,9 +195,9 @@ class CZS(Generic[LINE_TYPE]):
         self.__bi_in = zs.bi_in
         self.__bi_out = zs.bi_out
 
-    def make_copy(self) -> 'CZS':
+    def make_copy(self) -> 'Zs':
         """创建当前中枢的一个副本"""
-        copy = CZS(lst=None, is_sure=self.is_sure)
+        copy = Zs(lst=None, is_sure=self.is_sure)
         copy.init_from_zs(zs=self)
         return copy
 

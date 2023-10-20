@@ -3,7 +3,7 @@ from typing import Dict, Optional
 from data_process.common.cenum import TRADE_INFO_LST
 
 
-class CTradeInfo:
+class TradeInfo:
     def __init__(self, info: Dict[str, float]):
         self.metric: Dict[str, Optional[float]] = {}
         for metric_name in TRADE_INFO_LST:

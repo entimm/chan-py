@@ -1,9 +1,9 @@
-from data_process.common.cenum import TREND_TYPE
-from data_process.common.chan_exception import CChanException, ErrCode
+from data_process.common.cenum import TrendType
+from data_process.common.chan_exception import ChanException, ErrCode
 
 
-class CTrendModel:
-    def __init__(self, trend_type: TREND_TYPE, T: int):
+class TrendModel:
+    def __init__(self, trend_type: TrendType, T: int):
         self.T = T
         self.arr = []
         self.type = trend_type
@@ -12,11 +12,11 @@ class CTrendModel:
         self.arr.append(value)
         if len(self.arr) > self.T:
             self.arr = self.arr[-self.T:]
-        if self.type == TREND_TYPE.MEAN:
+        if self.type == TrendType.MEAN:
             return sum(self.arr)/len(self.arr)
-        elif self.type == TREND_TYPE.MAX:
+        elif self.type == TrendType.MAX:
             return max(self.arr)
-        elif self.type == TREND_TYPE.MIN:
+        elif self.type == TrendType.MIN:
             return min(self.arr)
         else:
-            raise CChanException(f"Unknown trendModel Type = {self.type}", ErrCode.PARA_ERROR)
+            raise ChanException(f"Unknown trendModel Type = {self.type}", ErrCode.PARA_ERROR)

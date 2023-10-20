@@ -2,7 +2,7 @@ import copy
 from dataclasses import dataclass
 from math import sqrt
 
-from data_process.common.cenum import BI_DIR, TREND_LINE_SIDE
+from data_process.common.cenum import BiDir, TrendLineSide
 
 
 @dataclass
@@ -23,15 +23,15 @@ class Line:
         return abs(self.slope*p.x - p.y + self.p.y - self.slope*self.p.x) / sqrt(self.slope**2 + 1)
 
 
-class CTrendLine:
-    def __init__(self, lst, side=TREND_LINE_SIDE.OUTSIDE):
+class TrendLine:
+    def __init__(self, lst, side=TrendLineSide.OUTSIDE):
         self.line = None
         self.side = side
         self.cal(lst)
 
     def cal(self, lst):
         bench = float('inf')
-        if self.side == TREND_LINE_SIDE.INSIDE:
+        if self.side == TrendLineSide.INSIDE:
             all_p = [Point(bi.get_begin_klu().idx, bi.get_begin_val()) for bi in lst[-1::-2]]
         else:
             all_p = [Point(bi.get_end_klu().idx, bi.get_end_val()) for bi in lst[-1::-2]]
@@ -48,9 +48,9 @@ class CTrendLine:
 
 
 def init_peak_slope(_dir, side):
-    if side == TREND_LINE_SIDE.INSIDE:
+    if side == TrendLineSide.INSIDE:
         return 0
-    elif _dir == BI_DIR.UP:
+    elif _dir == BiDir.UP:
         return float("inf")
     else:
         return -float("inf")
@@ -62,14 +62,14 @@ def cal_tl(c_p, _dir, side):
     idx = 1
     for point_idx, p2 in enumerate(c_p[1:]):
         slope = p.cal_slope(p2)
-        if (_dir == BI_DIR.UP and slope < 0) or (_dir == BI_DIR.DOWN and slope > 0):
+        if (_dir == BiDir.UP and slope < 0) or (_dir == BiDir.DOWN and slope > 0):
             continue
-        if side == TREND_LINE_SIDE.INSIDE:
-            if (_dir == BI_DIR.UP and slope > peak_slope) or (_dir == BI_DIR.DOWN and slope < peak_slope):
+        if side == TrendLineSide.INSIDE:
+            if (_dir == BiDir.UP and slope > peak_slope) or (_dir == BiDir.DOWN and slope < peak_slope):
                 peak_slope = slope
                 idx = point_idx+1
         else:
-            if (_dir == BI_DIR.UP and slope < peak_slope) or (_dir == BI_DIR.DOWN and slope > peak_slope):
+            if (_dir == BiDir.UP and slope < peak_slope) or (_dir == BiDir.DOWN and slope > peak_slope):
                 peak_slope = slope
                 idx = point_idx+1
     return Line(p, peak_slope), idx

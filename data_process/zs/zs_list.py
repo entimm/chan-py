@@ -1,18 +1,18 @@
 from typing import List, Union, overload
 
-from data_process.bi.bi import CBi
-from data_process.bi.bi_list import CBiList
+from data_process.bi.bi import Bi
+from data_process.bi.bi_list import BiList
 from data_process.common.func_util import revert_bi_dir
-from data_process.seg.seg import CSeg
-from data_process.seg.seg_list_comm import CSegListComm
-from data_process.zs.zs_config import CZSConfig
+from data_process.seg.seg import Seg
+from data_process.seg.seg_list_comm import SegListComm
+from data_process.zs.zs_config import ZsConfig
 
-from .zs import CZS
+from .zs import Zs
 
 
-class CZSList:
-    def __init__(self, zs_config=CZSConfig()):
-        self.zs_lst: List[CZS] = []
+class ZsList:
+    def __init__(self, zs_config=ZsConfig()):
+        self.zs_lst: List[Zs] = []
 
         self.config = zs_config
         self.free_item_lst = []
@@ -20,7 +20,7 @@ class CZSList:
         self.FORCE_CAL_ALL = False  # 控制是否强制计算所有的点，理论上开不开结果一样，效率相差比较多，debug时打开
         self.last_sure_pos = -1  # 上一次计算时sure seg【起始】klu的位置，用起始原因是因为这一次计算可能最后一个线段是刚刚生成的
 
-    def update_last_pos(self, seg_list: CSegListComm):
+    def update_last_pos(self, seg_list: SegListComm):
         """更新上一次确定的位置"""
         self.last_sure_pos = -1
         if self.FORCE_CAL_ALL:
@@ -30,7 +30,7 @@ class CZSList:
                 self.last_sure_pos = seg.end_bi.get_begin_klu().idx
                 return
 
-    def seg_need_cal(self, seg: CSeg):
+    def seg_need_cal(self, seg: Seg):
         """判断一个线段是否需要计算"""
         return seg.end_bi.get_end_klu().idx > self.last_sure_pos
 
@@ -49,7 +49,7 @@ class CZSList:
     def clear_free_lst(self):
         self.free_item_lst = []
 
-    def update(self, bi: CBi, is_sure=True):
+    def update(self, bi: Bi, is_sure=True):
         if len(self.free_item_lst) == 0 and self.try_add_to_end(bi):
             # zs_combine_mode=peak合并模式下会触发生效，=zs合并一定无效返回
             self.try_combine()  # 新形成的中枢尝试和之前的中枢合并
@@ -89,9 +89,9 @@ class CZSList:
                 return None
         min_high = min(item._high() for item in lst)
         max_low = max(item._low() for item in lst)
-        return CZS(lst, is_sure=is_sure) if min_high > max_low else None
+        return Zs(lst, is_sure=is_sure) if min_high > max_low else None
 
-    def cal_bi_zs(self, bi_lst: Union[CBiList, CSegListComm], seg_lst: CSegListComm):
+    def cal_bi_zs(self, bi_lst: Union[BiList, SegListComm], seg_lst: SegListComm):
         """计算笔的中枢"""
         if self.config.zs_algo == "normal":
             self.zs_lst = [zs for zs in self.zs_lst if zs.end.idx is not None and zs.end.idx <= self.last_sure_pos]
@@ -115,7 +115,7 @@ class CZSList:
             for bi in bi_lst[begin_bi_idx:]:
                 self.update_overseg_zs(bi)
 
-    def update_overseg_zs(self, bi: CBi | CSeg):
+    def update_overseg_zs(self, bi: Bi | Seg):
         """更新超过线段的中枢"""
         if len(self.zs_lst) and len(self.free_item_lst) == 0:
             if bi.next is None:
@@ -133,12 +133,12 @@ class CZSList:
         return len(self.zs_lst)
 
     @overload
-    def __getitem__(self, index: int) -> CZS: ...
+    def __getitem__(self, index: int) -> Zs: ...
 
     @overload
-    def __getitem__(self, index: slice) -> List[CZS]: ...
+    def __getitem__(self, index: slice) -> List[Zs]: ...
 
-    def __getitem__(self, index: Union[slice, int]) -> Union[List[CZS], CZS]:
+    def __getitem__(self, index: Union[slice, int]) -> Union[List[Zs], Zs]:
         return self.zs_lst[index]
 
     def try_combine(self):

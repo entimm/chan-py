@@ -2,7 +2,7 @@ from datetime import datetime
 
 import ccxt
 
-from common.const import AUTYPE, DATA_FIELD, KL_TYPE
+from common.const import AuType, DataField, LvType
 from common.func_util import create_item_dict
 from data_fetch.abs_stock_api import AbsStockApi
 
@@ -10,7 +10,7 @@ from data_fetch.abs_stock_api import AbsStockApi
 class CcxtFetcher(AbsStockApi):
     is_connect = None
 
-    def __init__(self, code, k_type=KL_TYPE.K_DAY, begin_date=None, end_date=None, autype=AUTYPE.QFQ):
+    def __init__(self, code, k_type=LvType.K_DAY, begin_date=None, end_date=None, autype=AuType.QFQ):
         super(CcxtFetcher, self).__init__(code, k_type, begin_date, end_date, autype)
 
     def get_kl_data(self):
@@ -30,26 +30,26 @@ class CcxtFetcher(AbsStockApi):
                 item[3],
                 item[4]
             ]
-            yield create_item_dict(item_data, self.columnNameMap(fields)), True
+            yield create_item_dict(item_data, self.column_name_map(fields)), True
 
     def __convert_period_type(self):
         _dict = {
-            KL_TYPE.K_DAY: '1d',
-            KL_TYPE.K_WEEK: '1w',
-            KL_TYPE.K_MON: '1M',
-            KL_TYPE.K_5M: '5m',
-            KL_TYPE.K_15M: '15m',
-            KL_TYPE.K_30M: '30m',
-            KL_TYPE.K_60M: '1h',
+            LvType.K_DAY: '1d',
+            LvType.K_WEEK: '1w',
+            LvType.K_MON: '1M',
+            LvType.K_5M: '5m',
+            LvType.K_15M: '15m',
+            LvType.K_30M: '30m',
+            LvType.K_60M: '1h',
         }
         return _dict[self.k_type]
 
-    def columnNameMap(self, fileds: str):
+    def column_name_map(self, fileds: str):
         _dict = {
-            "time": DATA_FIELD.FIELD_TIME,
-            "open": DATA_FIELD.FIELD_OPEN,
-            "high": DATA_FIELD.FIELD_HIGH,
-            "low": DATA_FIELD.FIELD_LOW,
-            "close": DATA_FIELD.FIELD_CLOSE,
+            "time": DataField.FIELD_TIME,
+            "open": DataField.FIELD_OPEN,
+            "high": DataField.FIELD_HIGH,
+            "low": DataField.FIELD_LOW,
+            "close": DataField.FIELD_CLOSE,
         }
         return [_dict[x] for x in fileds.split(",")]

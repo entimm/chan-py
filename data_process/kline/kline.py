@@ -1,27 +1,27 @@
-from data_process.combiner.kline_combiner import CKLine_Combiner
-from data_process.common.cenum import FX_CHECK_METHOD, FX_TYPE, KLINE_DIR
-from data_process.common.chan_exception import CChanException, ErrCode
+from data_process.combiner.kline_combiner import KlineCombiner
+from data_process.common.cenum import FxCheckMethod, FxType, KlineDir
+from data_process.common.chan_exception import ChanException, ErrCode
 from data_process.common.func_util import has_overlap
-from data_process.kline.kline_unit import CKLine_Unit
+from data_process.kline.kline_unit import Kline_Unit
 
 
 # 合并后的K线
-class CKLine(CKLine_Combiner[CKLine_Unit]):
-    def __init__(self, kl_unit: CKLine_Unit, idx, _dir=KLINE_DIR.UP):
-        super(CKLine, self).__init__(kl_unit, _dir)
+class Kline(KlineCombiner[Kline_Unit]):
+    def __init__(self, kl_unit: Kline_Unit, idx, _dir=KlineDir.UP):
+        super(Kline, self).__init__(kl_unit, _dir)
         self.idx: int = idx
         self.kl_type = kl_unit.kl_type
         kl_unit.set_klc(self)
 
     def __str__(self):
         fx_token = ""
-        if self.fx == FX_TYPE.TOP:
+        if self.fx == FxType.TOP:
             fx_token = "^"
-        elif self.fx == FX_TYPE.BOTTOM:
+        elif self.fx == FxType.BOTTOM:
             fx_token = "_"
         return f"{self.idx}th{fx_token}:{self.time_begin}~{self.time_end}({self.kl_type}|{len(self.lst)}) low={self.low} high={self.high}"
 
-    def GetSubKLC(self):
+    def get_sub_klc(self):
         """
         获取子K线组合。
         注意：可能会出现相邻的两个KLC的子KLC会有重复，因为子KLU合并时正好跨过了父KLC的结束时间边界。
@@ -47,7 +47,7 @@ class CKLine(CKLine_Combiner[CKLine_Unit]):
         # 相同也算重叠，也就是没有gap
         return not has_overlap(self.get_klu_min_low(), self.get_klu_max_high(), self.next.get_klu_min_low(), self.next.get_klu_max_high(), equal=True)
 
-    def check_fx_valid(self, item2: "CKLine", method, for_virtual=False):
+    def check_fx_valid(self, item2: "Kline", method, for_virtual=False):
         """
         检查是否满足有效的分型条件。
         for_virtual: 虚笔时使用。
@@ -57,19 +57,19 @@ class CKLine(CKLine_Combiner[CKLine_Unit]):
         assert self.pre is not None
         assert item2.idx > self.idx
         # 检查顶分型
-        if self.fx == FX_TYPE.TOP:
+        if self.fx == FxType.TOP:
             # 如果不是虚笔，确保item2是底分型
-            assert for_virtual or item2.fx == FX_TYPE.BOTTOM
+            assert for_virtual or item2.fx == FxType.BOTTOM
             # 根据HALF方法，只检测前两个KLC来确定分型的有效性
-            if method == FX_CHECK_METHOD.HALF:
+            if method == FxCheckMethod.HALF:
                 item2_high = max([item2.pre.high, item2.high])
                 self_low = min([self.low, self.next.low])
             # 根据LOSS方法，只检测顶底分形KLC来确定分型的有效性
-            elif method == FX_CHECK_METHOD.LOSS:
+            elif method == FxCheckMethod.LOSS:
                 item2_high = item2.high
                 self_low = self.low
             # 根据STRICT或TOTALLY方法，检测更多的KLC来确定分型的有效性
-            elif method in (FX_CHECK_METHOD.STRICT, FX_CHECK_METHOD.TOTALLY):
+            elif method in (FxCheckMethod.STRICT, FxCheckMethod.TOTALLY):
                 # 如果是虚笔，只考虑item2的前一个KLC
                 if for_virtual:
                     item2_high = max([item2.pre.high, item2.high])
@@ -79,26 +79,26 @@ class CKLine(CKLine_Combiner[CKLine_Unit]):
                     item2_high = max([item2.pre.high, item2.high, item2.next.high])
                 self_low = min([self.pre.low, self.low, self.next.low])
             else:
-                raise CChanException("bi_fx_check config error!", ErrCode.CONFIG_ERROR)
+                raise ChanException("bi_fx_check config error!", ErrCode.CONFIG_ERROR)
             # 根据TOTALLY方法返回结果
-            if method == FX_CHECK_METHOD.TOTALLY:
+            if method == FxCheckMethod.TOTALLY:
                 return self.low > item2_high
             else:
                 return self.high > item2_high and item2.low < self_low
         # 检查底分型
-        elif self.fx == FX_TYPE.BOTTOM:
+        elif self.fx == FxType.BOTTOM:
             # 如果不是虚笔，确保item2是顶分型
-            assert for_virtual or item2.fx == FX_TYPE.TOP
+            assert for_virtual or item2.fx == FxType.TOP
             # 根据HALF方法，只检测前两个KLC来确定分型的有效性
-            if method == FX_CHECK_METHOD.HALF:
+            if method == FxCheckMethod.HALF:
                 item2_low = min([item2.pre.low, item2.low])
                 cur_high = max([self.high, self.next.high])
             # 根据LOSS方法，只检测顶底分形KLC来确定分型的有效性
-            elif method == FX_CHECK_METHOD.LOSS:
+            elif method == FxCheckMethod.LOSS:
                 item2_low = item2.low
                 cur_high = self.high
             # 根据STRICT或TOTALLY方法，检测更多的KLC来确定分型的有效性
-            elif method in (FX_CHECK_METHOD.STRICT, FX_CHECK_METHOD.TOTALLY):
+            elif method in (FxCheckMethod.STRICT, FxCheckMethod.TOTALLY):
                 # 如果是虚笔，只考虑item2的前一个KLC
                 if for_virtual:
                     item2_low = min([item2.pre.low, item2.low])
@@ -108,11 +108,11 @@ class CKLine(CKLine_Combiner[CKLine_Unit]):
                     item2_low = min([item2.pre.low, item2.low, item2.next.low])
                 cur_high = max([self.pre.high, self.high, self.next.high])
             else:
-                raise CChanException("bi_fx_check config error!", ErrCode.CONFIG_ERROR)
+                raise ChanException("bi_fx_check config error!", ErrCode.CONFIG_ERROR)
             # 根据TOTALLY方法返回结果
-            if method == FX_CHECK_METHOD.TOTALLY:
+            if method == FxCheckMethod.TOTALLY:
                 return self.high < item2_low
             else:
                 return self.low < item2_low and item2.high > cur_high
         else:
-            raise CChanException("only top/bottom fx can check_valid_top_button", ErrCode.BI_ERR)
+            raise ChanException("only top/bottom fx can check_valid_top_button", ErrCode.BI_ERR)

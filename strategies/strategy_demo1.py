@@ -1,8 +1,8 @@
-from data_process.chan import CChan
-from data_process.chan_config import CChanConfig
-from data_process.common.cenum import BSP_TYPE, FX_TYPE
-from common.const import AUTYPE, KL_TYPE
-from data_fetch.manager import DATA_SRC
+from data_process.chan import Chan
+from data_process.chan_config import ChanConfig
+from data_process.common.cenum import BspType, FxType
+from common.const import AuType, LvType
+from data_fetch.manager import DataSrc
 
 if __name__ == "__main__":
     """
@@ -12,23 +12,23 @@ if __name__ == "__main__":
     code = "sz.000001"
     begin_time = "2021-01-01"
     end_time = None
-    data_src = DATA_SRC.BAO_STOCK
-    lv_list = [KL_TYPE.K_DAY]
+    data_src = DataSrc.BAO_STOCK
+    lv_list = [LvType.K_DAY]
 
-    config = CChanConfig({
+    config = ChanConfig({
         "triger_step": True,  # 打开开关！
         "divergence_rate": 0.8,
         "min_zs_cnt": 1,
     })
 
-    chan = CChan(
+    chan = Chan(
         code=code,
         begin_time=begin_time,
         end_time=end_time,
         data_src=data_src,
         lv_list=lv_list,
         config=config,
-        autype=AUTYPE.QFQ,
+        autype=AuType.QFQ,
     )
 
     is_hold = False
@@ -38,15 +38,15 @@ if __name__ == "__main__":
         if not bsp_list:  # 为空
             continue
         last_bsp = bsp_list[-1]  # 最后一个买卖点
-        if BSP_TYPE.T1 not in last_bsp.type and BSP_TYPE.T1P not in last_bsp.type:  # 加入只做1类买卖点
+        if BspType.T1 not in last_bsp.type and BspType.T1P not in last_bsp.type:  # 加入只做1类买卖点
             continue
 
         cur_lv_chan = chan_snapshot[0]
-        if cur_lv_chan[-2].fx == FX_TYPE.BOTTOM and last_bsp.is_buy and not is_hold:  # 底分型形成后开仓
+        if cur_lv_chan[-2].fx == FxType.BOTTOM and last_bsp.is_buy and not is_hold:  # 底分型形成后开仓
             last_buy_price = cur_lv_chan[-1][-1].close  # 开仓价格为最后一根K线close
             print(f'{cur_lv_chan[-1][-1].time}:buy price = {last_buy_price}')
             is_hold = True
-        elif cur_lv_chan[-2].fx == FX_TYPE.TOP and not last_bsp.is_buy and is_hold:  # 顶分型形成后平仓
+        elif cur_lv_chan[-2].fx == FxType.TOP and not last_bsp.is_buy and is_hold:  # 顶分型形成后平仓
             sell_price = cur_lv_chan[-1][-1].close
             print(f'{cur_lv_chan[-1][-1].time}:sell price = {sell_price}, profit rate = {(sell_price-last_buy_price)/last_buy_price*100:.2f}%')
             is_hold = False

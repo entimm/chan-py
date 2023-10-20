@@ -1,15 +1,15 @@
 from typing import List, Optional, Union, overload
 
-from data_process.common.cenum import FX_TYPE, KLINE_DIR
-from data_process.kline.kline import CKLine
+from data_process.common.cenum import FxType, KlineDir
+from data_process.kline.kline import Kline
 
-from .bi import CBi
-from .bi_config import CBiConfig
+from .bi import Bi
+from .bi_config import BiConfig
 
 
-class CBiList:
-    def __init__(self, bi_conf=CBiConfig()):
-        self.bi_list: List[CBi] = []
+class BiList:
+    def __init__(self, bi_conf=BiConfig()):
+        self.bi_list: List[Bi] = []
         self.last_end = None  # 最后一笔的尾部
         self.config = bi_conf
 
@@ -22,18 +22,18 @@ class CBiList:
         yield from self.bi_list
 
     @overload
-    def __getitem__(self, index: int) -> CBi: ...
+    def __getitem__(self, index: int) -> Bi: ...
 
     @overload
-    def __getitem__(self, index: slice) -> List[CBi]: ...
+    def __getitem__(self, index: slice) -> List[Bi]: ...
 
-    def __getitem__(self, index: Union[slice, int]) -> Union[List[CBi], CBi]:
+    def __getitem__(self, index: Union[slice, int]) -> Union[List[Bi], Bi]:
         return self.bi_list[index]
 
     def __len__(self):
         return len(self.bi_list)
 
-    def try_create_first_bi(self, klc: CKLine) -> bool:
+    def try_create_first_bi(self, klc: Kline) -> bool:
         """
         尝试使用给定的K线`klc`创建第一笔
         如果成功创建了第一笔，返回`True`，否则将`klc`添加到`free_klc_lst`并返回`False`
@@ -50,7 +50,7 @@ class CBiList:
         self.last_end = klc
         return False
 
-    def update_bi(self, klc: CKLine, last_klc: CKLine, cal_virtual: bool) -> bool:
+    def update_bi(self, klc: Kline, last_klc: Kline, cal_virtual: bool) -> bool:
         """
         根据给定的K线`klc`和`last_klc`更新笔列表
         如果成功更新或添加了笔，返回`True`，否则返回`False`
@@ -63,7 +63,7 @@ class CBiList:
         else:
             return flag1
 
-    def update_bi_sure(self, klc: CKLine) -> bool:
+    def update_bi_sure(self, klc: Kline) -> bool:
         """
         根据给定的K线`klc`更新确定的笔
         """
@@ -72,7 +72,7 @@ class CBiList:
         # 删除任何存在的虚拟笔
         self.delete_virtual_bi()
         # 如果传入的K线`klc`没有明确的分型（即顶或底），检查最后一笔的最后一个K线单元的索引是否已更改，并返回结果
-        if klc.fx == FX_TYPE.UNKNOWN:
+        if klc.fx == FxType.UNKNOWN:
             return _tmp_end != self.get_last_klu_of_last_bi()
         # 如果不存在最后的结束K线或笔列表为空（即还没有创建任何笔），尝试创建第一笔
         if self.last_end is None or len(self.bi_list) == 0:
@@ -102,7 +102,7 @@ class CBiList:
                 # 否则，从笔列表中删除这笔
                 del self.bi_list[-1]
 
-    def try_add_virtual_bi(self, klc: CKLine, need_del_end=False):
+    def try_add_virtual_bi(self, klc: Kline, need_del_end=False):
         """
         尝试添加一个虚拟笔
         返回`True`如果成功添加虚拟笔，否则返回`False`
@@ -136,8 +136,8 @@ class CBiList:
             # - 并且最后一笔的结束和`_tmp_klc`之间的分型有效（通过`check_fx_valid`方法检查），
             # - 则可以形成一个新的虚拟笔
             if (
-                    (self[-1].is_down() and _tmp_klc.dir == KLINE_DIR.UP and _tmp_klc.low > self[-1].end_klc.low) or
-                    (self[-1].is_up() and _tmp_klc.dir == KLINE_DIR.DOWN and _tmp_klc.high < self[-1].end_klc.high)
+                    (self[-1].is_down() and _tmp_klc.dir == KlineDir.UP and _tmp_klc.low > self[-1].end_klc.low) or
+                    (self[-1].is_up() and _tmp_klc.dir == KlineDir.DOWN and _tmp_klc.high < self[-1].end_klc.high)
             ) and self[-1].end_klc.check_fx_valid(_tmp_klc, self.config.bi_fx_check, for_virtual=True):
                 # 新增一笔
                 self.add_new_bi(self.last_end, _tmp_klc, is_sure=False)
@@ -151,13 +151,13 @@ class CBiList:
         """
         根据给定的K线`pre_klc`和`cur_klc`添加一个新的笔
         """
-        self.bi_list.append(CBi(pre_klc, cur_klc, idx=len(self.bi_list), is_sure=is_sure))
+        self.bi_list.append(Bi(pre_klc, cur_klc, idx=len(self.bi_list), is_sure=is_sure))
         # 如果笔列表中至少有两笔，设置新笔的前一笔和前一笔的后一笔
         if len(self.bi_list) >= 2:
             self.bi_list[-2].next = self.bi_list[-1]
             self.bi_list[-1].pre = self.bi_list[-2]
 
-    def satisfy_bi_span(self, klc: CKLine, last_end: CKLine):
+    def satisfy_bi_span(self, klc: Kline, last_end: Kline):
         """
         检查给定的K线`klc`和`last_end`之间是否满足创建笔的跨度条件
         """
@@ -179,7 +179,7 @@ class CBiList:
                 break
         return bi_span >= 3 and uint_kl_cnt >= 3
 
-    def get_klc_span(self, klc: CKLine, last_end: CKLine) -> int:
+    def get_klc_span(self, klc: Kline, last_end: Kline) -> int:
         """
         计算给定的K线`klc`和`last_end`之间的跨度
         如果配置中考虑缺口作为K线，遍历K线并检查它们之间是否有缺口，如果有，增加跨度
@@ -196,7 +196,7 @@ class CBiList:
             tmp_klc = tmp_klc.next
         return span
 
-    def can_make_bi(self, klc: CKLine, last_end: CKLine):
+    def can_make_bi(self, klc: Kline, last_end: Kline):
         """
         检查是否可以根据给定的K线`klc`和`last_end`创建一个新的笔
         """
@@ -210,7 +210,7 @@ class CBiList:
         else:
             return satisify_span
 
-    def try_update_end(self, klc: CKLine) -> bool:
+    def try_update_end(self, klc: Kline) -> bool:
         """
         检查给定的K线是否可以作为当前笔的新结束，并在满足条件的情况下进行更新
         """
@@ -218,8 +218,8 @@ class CBiList:
             return False
         last_bi = self.bi_list[-1]
         # 如果最后一笔是上升的、`klc`是顶分型、并且`klc`的高点大于或等于最后一笔的结束高点，或者最后一笔是下降的、`klc`是底分型、并且`klc`的低点小于或等于最后一笔的结束低点，则更新最后一笔的结束
-        if (last_bi.is_up() and klc.fx == FX_TYPE.TOP and klc.high >= last_bi.get_end_val()) or \
-           (last_bi.is_down() and klc.fx == FX_TYPE.BOTTOM and klc.low <= last_bi.get_end_val()):
+        if (last_bi.is_up() and klc.fx == FxType.TOP and klc.high >= last_bi.get_end_val()) or \
+           (last_bi.is_down() and klc.fx == FxType.BOTTOM and klc.low <= last_bi.get_end_val()):
             last_bi.update_new_end(klc)
             self.last_end = klc
             return True
@@ -233,11 +233,11 @@ class CBiList:
         return self.bi_list[-1].get_end_klu().idx if len(self) > 0 else None
 
 
-def end_is_peak(last_end: CKLine, cur_end: CKLine) -> bool:
+def end_is_peak(last_end: Kline, cur_end: Kline) -> bool:
     """
     检查当前结束的K线是否是一个峰值（对于上升趋势）或谷值（对于下降趋势）
     """
-    if last_end.fx == FX_TYPE.BOTTOM:
+    if last_end.fx == FxType.BOTTOM:
         cmp_thred = cur_end.high  # 或者严格点选择get_klu_max_high()
         klc = last_end.get_next()
         while True:
@@ -246,7 +246,7 @@ def end_is_peak(last_end: CKLine, cur_end: CKLine) -> bool:
             if klc.high > cmp_thred:
                 return False
             klc = klc.get_next()
-    elif last_end.fx == FX_TYPE.TOP:
+    elif last_end.fx == FxType.TOP:
         cmp_thred = cur_end.low  # 或者严格点选择get_klu_min_low()
         klc = last_end.get_next()
         while True:

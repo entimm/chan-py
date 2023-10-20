@@ -1,8 +1,8 @@
-from common.const import KL_TYPE, AUTYPE
+from common.const import LvType, AuType
 from data_fetch.fetchers.baostock_fetcher import BaoStockFetcher
-from data_fetch.manager import DATA_SRC
-from data_process.chan import CChan
-from data_process.chan_config import CChanConfig
+from data_fetch.manager import DataSrc
+from data_process.chan import Chan
+from data_process.chan_config import ChanConfig
 
 if __name__ == "__main__":
     """
@@ -14,36 +14,36 @@ if __name__ == "__main__":
     code = "sz.000001"
     begin_time = "2023-06-01"
     end_time = None
-    data_src = DATA_SRC.BAO_STOCK
-    lv_list = [KL_TYPE.K_DAY, KL_TYPE.K_30M]
+    data_src = DataSrc.BAO_STOCK
+    lv_list = [LvType.K_DAY, LvType.K_30M]
 
-    config = CChanConfig({
+    config = ChanConfig({
         "triger_step": True,
         "divergence_rate": 0.8,
         "min_zs_cnt": 1,
     })
 
-    chan = CChan(
+    chan = Chan(
         code=code,
         begin_time=begin_time,  # 已经没啥用了这一行
         end_time=end_time,  # 已经没啥用了这一行
         data_src=data_src,  # 已经没啥用了这一行
         lv_list=lv_list,
         config=config,
-        autype=AUTYPE.QFQ,  # 已经没啥用了这一行
+        autype=AuType.QFQ,  # 已经没啥用了这一行
     )
     BaoStockFetcher.do_init()
-    data_src_day = BaoStockFetcher(code, k_type=KL_TYPE.K_DAY, begin_date=begin_time, end_date=end_time, autype=AUTYPE.QFQ)
-    data_src_30m = BaoStockFetcher(code, k_type=KL_TYPE.K_30M, begin_date=begin_time, end_date=end_time, autype=AUTYPE.QFQ)
+    data_src_day = BaoStockFetcher(code, k_type=LvType.K_DAY, begin_date=begin_time, end_date=end_time, autype=AuType.QFQ)
+    data_src_30m = BaoStockFetcher(code, k_type=LvType.K_30M, begin_date=begin_time, end_date=end_time, autype=AuType.QFQ)
     kl_30m_all = list(data_src_30m.get_kl_data())
 
     for _idx, klu in enumerate(data_src_day.get_kl_data()):
         # 本质是每喂一根日线的时候，这根日线之前的都要喂过，提前喂多点不要紧，框架会自动根据日线来截取需要的30M K线
         # 30M一口气全部喂完，后续就不用关注时间对齐的问题了
         if _idx == 0:
-            chan.trigger_load({KL_TYPE.K_DAY: [klu], KL_TYPE.K_30M: kl_30m_all})
+            chan.trigger_load({LvType.K_DAY: [klu], LvType.K_30M: kl_30m_all})
         else:
-            chan.trigger_load({KL_TYPE.K_DAY: [klu]})
+            chan.trigger_load({LvType.K_DAY: [klu]})
 
         if _idx == 4:  # demo只检查4根日线
             break

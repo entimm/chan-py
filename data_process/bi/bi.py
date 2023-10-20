@@ -1,37 +1,37 @@
 from typing import List, Optional
 
-from common.const import DATA_FIELD
-from data_process.common.cache import make_cache
-from data_process.common.cenum import BI_DIR, BI_TYPE, FX_TYPE, MACD_ALGO
-from data_process.common.chan_exception import CChanException, ErrCode
-from data_process.kline.kline import CKLine
-from data_process.kline.kline_unit import CKLine_Unit
+from common.const import DataField
+from data_process.common.cache import MakeCache
+from data_process.common.cenum import BiDir, BiType, FxType, MacdAlgo
+from data_process.common.chan_exception import ChanException, ErrCode
+from data_process.kline.kline import Kline
+from data_process.kline.kline_unit import Kline_Unit
 
-class CBi:
-    def __init__(self, begin_klc: CKLine, end_klc: CKLine, idx: int, is_sure: bool):
+class Bi:
+    def __init__(self, begin_klc: Kline, end_klc: Kline, idx: int, is_sure: bool):
         # self.__begin_klc = begin_klc
         # self.__end_klc = end_klc
         self.__dir = None
         self.__idx = idx
-        self.__type = BI_TYPE.STRICT
+        self.__type = BiType.STRICT
 
         self.set(begin_klc, end_klc)
 
         self.__is_sure = is_sure
         self.__sure_end = None
 
-        self.__klc_lst: List[CKLine] = []
+        self.__klc_lst: List[Kline] = []
         self.__seg_idx: Optional[int] = None
 
         # 解决循环引用问题
-        from data_process.seg.seg import CSeg
-        from data_process.bsl_point.bs_point import CBS_Point
+        from data_process.seg.seg import Seg
+        from data_process.bsl_point.bs_point import BsPoint
 
-        self.parent_seg: Optional[CSeg[CBi]] = None  # 在哪个线段里面
-        self.bsp: Optional[CBS_Point] = None  # 尾部是不是买卖点
+        self.parent_seg: Optional[Seg[Bi]] = None  # 在哪个线段里面
+        self.bsp: Optional[BsPoint] = None  # 尾部是不是买卖点
 
-        self.next: Optional[CBi] = None
-        self.pre: Optional[CBi] = None
+        self.next: Optional[Bi] = None
+        self.pre: Optional[Bi] = None
 
     def clean_cache(self):
         self._memoize_cache = {}
@@ -85,79 +85,79 @@ class CBi:
             else:
                 assert self.begin_klc.low < self.end_klc.high
         except Exception as e:
-            raise CChanException(
+            raise ChanException(
                 f"{self.idx}:{self.begin_klc[0].time}~{self.end_klc[-1].time}笔的方向和收尾位置不一致!",
                 ErrCode.BI_ERR) from e
 
-    def set(self, begin_klc: CKLine, end_klc: CKLine):
-        self.__begin_klc: CKLine = begin_klc
-        self.__end_klc: CKLine = end_klc
-        if begin_klc.fx == FX_TYPE.BOTTOM:
-            self.__dir = BI_DIR.UP
-        elif begin_klc.fx == FX_TYPE.TOP:
-            self.__dir = BI_DIR.DOWN
+    def set(self, begin_klc: Kline, end_klc: Kline):
+        self.__begin_klc: Kline = begin_klc
+        self.__end_klc: Kline = end_klc
+        if begin_klc.fx == FxType.BOTTOM:
+            self.__dir = BiDir.UP
+        elif begin_klc.fx == FxType.TOP:
+            self.__dir = BiDir.DOWN
         else:
-            raise CChanException("ERROR DIRECTION when creating bi", ErrCode.BI_ERR)
+            raise ChanException("ERROR DIRECTION when creating bi", ErrCode.BI_ERR)
         self.check()
         self.clean_cache()
 
-    @make_cache
+    @MakeCache
     def get_begin_val(self):
         return self.begin_klc.low if self.is_up() else self.begin_klc.high
 
-    @make_cache
+    @MakeCache
     def get_end_val(self):
         return self.end_klc.high if self.is_up() else self.end_klc.low
 
-    @make_cache
-    def get_begin_klu(self) -> CKLine_Unit:
+    @MakeCache
+    def get_begin_klu(self) -> Kline_Unit:
         if self.is_up():
             return self.begin_klc.get_peak_klu(is_high=False)
         else:
             return self.begin_klc.get_peak_klu(is_high=True)
 
-    @make_cache
-    def get_end_klu(self) -> CKLine_Unit:
+    @MakeCache
+    def get_end_klu(self) -> Kline_Unit:
         if self.is_up():
             return self.end_klc.get_peak_klu(is_high=True)
         else:
             return self.end_klc.get_peak_klu(is_high=False)
 
-    @make_cache
+    @MakeCache
     def amp(self):
         return abs(self.get_end_val() - self.get_begin_val())
 
-    @make_cache
+    @MakeCache
     def get_klu_cnt(self):
         return self.get_end_klu().idx - self.get_begin_klu().idx + 1
 
-    @make_cache
+    @MakeCache
     def get_klc_cnt(self):
         assert self.end_klc.idx == self.get_end_klu().klc.idx
         assert self.begin_klc.idx == self.get_begin_klu().klc.idx
         return self.end_klc.idx - self.begin_klc.idx + 1
 
-    @make_cache
+    @MakeCache
     def _high(self):
         return self.end_klc.high if self.is_up() else self.begin_klc.high
 
-    @make_cache
+    @MakeCache
     def _low(self):
         return self.begin_klc.low if self.is_up() else self.end_klc.low
 
-    @make_cache
+    @MakeCache
     def _mid(self):
         return (self._high() + self._low()) / 2  # 笔的中位价
 
-    @make_cache
+    @MakeCache
     def is_down(self):
-        return self.dir == BI_DIR.DOWN
+        return self.dir == BiDir.DOWN
 
-    @make_cache
+    @MakeCache
     def is_up(self):
-        return self.dir == BI_DIR.UP
+        return self.dir == BiDir.UP
 
-    def update_virtual_end(self, new_klc: CKLine):
+    def update_virtual_end(self, new_klc: Kline):
         self.__sure_end = self.end_klc
         self.update_new_end(new_klc)
         self.__is_sure = False
@@ -173,49 +173,49 @@ class CBi:
     def is_virtual_end(self):
         return self.sure_end is not None
 
-    def update_new_end(self, new_klc: CKLine):
+    def update_new_end(self, new_klc: Kline):
         self.__end_klc = new_klc
         self.check()
         self.clean_cache()
 
     def cal_macd_metric(self, macd_algo, is_reverse):
-        if macd_algo == MACD_ALGO.AREA:
+        if macd_algo == MacdAlgo.AREA:
             return self.cal_macd_half(is_reverse)
-        elif macd_algo == MACD_ALGO.PEAK:
+        elif macd_algo == MacdAlgo.PEAK:
             return self.cal_macd_peak()
-        elif macd_algo == MACD_ALGO.FULL_AREA:
+        elif macd_algo == MacdAlgo.FULL_AREA:
             return self.cal_macd_area()
-        elif macd_algo == MACD_ALGO.DIFF:
+        elif macd_algo == MacdAlgo.DIFF:
             return self.cal_macd_diff()
-        elif macd_algo == MACD_ALGO.SLOPE:
+        elif macd_algo == MacdAlgo.SLOPE:
             return self.cal_macd_slope()
-        elif macd_algo == MACD_ALGO.AMP:
+        elif macd_algo == MacdAlgo.AMP:
             return self.cal_macd_amp()
-        elif macd_algo == MACD_ALGO.AMOUNT:
-            return self.Cal_MACD_trade_metric(DATA_FIELD.FIELD_TURNOVER, cal_avg=False)
-        elif macd_algo == MACD_ALGO.VOLUMN:
-            return self.Cal_MACD_trade_metric(DATA_FIELD.FIELD_VOLUME, cal_avg=False)
-        elif macd_algo == MACD_ALGO.VOLUMN_AVG:
-            return self.Cal_MACD_trade_metric(DATA_FIELD.FIELD_VOLUME, cal_avg=True)
-        elif macd_algo == MACD_ALGO.AMOUNT_AVG:
-            return self.Cal_MACD_trade_metric(DATA_FIELD.FIELD_TURNOVER, cal_avg=True)
-        elif macd_algo == MACD_ALGO.TURNRATE_AVG:
-            return self.Cal_MACD_trade_metric(DATA_FIELD.FIELD_TURNRATE, cal_avg=True)
-        elif macd_algo == MACD_ALGO.RSI:
+        elif macd_algo == MacdAlgo.AMOUNT:
+            return self.cal_macd_trade_metric(DataField.FIELD_TURNOVER, cal_avg=False)
+        elif macd_algo == MacdAlgo.VOLUMN:
+            return self.cal_macd_trade_metric(DataField.FIELD_VOLUME, cal_avg=False)
+        elif macd_algo == MacdAlgo.VOLUMN_AVG:
+            return self.cal_macd_trade_metric(DataField.FIELD_VOLUME, cal_avg=True)
+        elif macd_algo == MacdAlgo.AMOUNT_AVG:
+            return self.cal_macd_trade_metric(DataField.FIELD_TURNOVER, cal_avg=True)
+        elif macd_algo == MacdAlgo.TURNRATE_AVG:
+            return self.cal_macd_trade_metric(DataField.FIELD_TURNRATE, cal_avg=True)
+        elif macd_algo == MacdAlgo.RSI:
             return self.cal_rsi()
         else:
-            raise CChanException(
+            raise ChanException(
                 f"unsupport macd_algo={macd_algo}, should be one of area/full_area/peak/diff/slope/amp",
                 ErrCode.PARA_ERROR)
 
-    @make_cache
+    @MakeCache
     def cal_rsi(self):
         rsi_lst: List[float] = []
         for klc in self.klc_lst:
             rsi_lst.extend(klu.rsi for klu in klc.lst)
         return 10000.0 / (min(rsi_lst) + 1e-7) if self.is_down() else max(rsi_lst)
 
-    @make_cache
+    @MakeCache
     def cal_macd_area(self):
         _s = 1e-7
         for klc in self.klc_lst:
@@ -223,7 +223,7 @@ class CBi:
                 _s += abs(klu.macd.macd)
         return _s
 
-    @make_cache
+    @MakeCache
     def cal_macd_peak(self):
         peak = 1e-7
         for klc in self.klc_lst:
@@ -241,7 +241,7 @@ class CBi:
         else:
             return self.cal_macd_half_obverse()
 
-    @make_cache
+    @MakeCache
     def cal_macd_half_obverse(self):
         _s = 1e-7
         begin_klu = self.get_begin_klu()
@@ -259,7 +259,7 @@ class CBi:
             break
         return _s
 
-    @make_cache
+    @MakeCache
     def cal_macd_half_reverse(self):
         _s = 1e-7
         begin_klu = self.get_end_klu()
@@ -277,7 +277,7 @@ class CBi:
             break
         return _s
 
-    @make_cache
+    @MakeCache
     def cal_macd_diff(self):
         """
         macd红绿柱最大值最小值之差
@@ -292,7 +292,7 @@ class CBi:
                     _min = macd
         return _max - _min
 
-    @make_cache
+    @MakeCache
     def cal_macd_slope(self):
         begin_klu = self.get_begin_klu()
         end_klu = self.get_end_klu()
@@ -301,7 +301,7 @@ class CBi:
         else:
             return (begin_klu.high - end_klu.low) / begin_klu.high / (end_klu.idx - begin_klu.idx + 1)
 
-    @make_cache
+    @MakeCache
     def cal_macd_amp(self):
         begin_klu = self.get_begin_klu()
         end_klu = self.get_end_klu()
@@ -310,7 +310,7 @@ class CBi:
         else:
             return (end_klu.high - begin_klu.low) / begin_klu.low
 
-    def Cal_MACD_trade_metric(self, metric: str, cal_avg=False) -> float:
+    def cal_macd_trade_metric(self, metric: str, cal_avg=False) -> float:
         _s = 0
         for klc in self.klc_lst:
             for klu in klc.lst:
