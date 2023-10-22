@@ -5,7 +5,7 @@ from data_process.chan import Chan
 from data_process.chan_config import ChanConfig
 from common.const import AuType, DataField, LvType
 from data_fetch.manager import DataSrc
-from data_fetch.fetchers.baostock_fetcher import BaoStockFetcher
+from data_fetch.fetchers.baostock_fetcher import BaostockFetcher
 from data_process.kline.kline_unit import Kline_Unit
 
 
@@ -28,7 +28,7 @@ if __name__ == "__main__":
     code = "sz.000001"
     begin_time = "2023-09-10"
     end_time = None
-    data_src_type = DataSrc.BAO_STOCK
+    data_src_type = DataSrc.BAOSTOCK
     lv_list = [LvType.K_60M, LvType.K_15M]
 
     config = ChanConfig({
@@ -42,8 +42,8 @@ if __name__ == "__main__":
         lv_list=lv_list,
         config=config,
     )
-    BaoStockFetcher.do_init()
-    data_src = BaoStockFetcher(code, k_type=LvType.K_15M, begin_date=begin_time, end_date=end_time, autype=AuType.QFQ)  # 获取最小级别
+    BaostockFetcher.do_init()
+    data_src = BaostockFetcher(code, k_type=LvType.K_15M, begin_date=begin_time, end_date=end_time, autype=AuType.QFQ)  # 获取最小级别
 
     klu_15m_lst_tmp: List[Kline_Unit] = []  # 存储用于合成当前60M K线的15M k线
 
@@ -76,4 +76,4 @@ if __name__ == "__main__":
             chan_snapshot = chan
             klu_15m_lst_tmp = []  # 清空1分钟K线，用于下一个五分钟周期的合成
 
-    BaoStockFetcher.do_close()
+    BaostockFetcher.do_close()

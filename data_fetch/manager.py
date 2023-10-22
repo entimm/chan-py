@@ -1,14 +1,14 @@
 from enum import Enum, auto
 
 class DataSrc(Enum):
-    BAO_STOCK = auto()
+    BAOSTOCK = auto()
     CCXT = auto()
     Y_FINANCE = auto()
     LOCAL = auto()
     GENERATE = auto()
 
 FETCHER_CLASSES = {
-    DataSrc.BAO_STOCK: "BaoStockFetcher",
+    DataSrc.BAOSTOCK: "BaostockFetcher",
     DataSrc.CCXT: "CcxtFetcher",
     DataSrc.Y_FINANCE: "YFinanceFetcher",
     DataSrc.LOCAL: "LocalFetcher",

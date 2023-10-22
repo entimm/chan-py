@@ -1,5 +1,5 @@
 from common.const import LvType, AuType
-from data_fetch.fetchers.baostock_fetcher import BaoStockFetcher
+from data_fetch.fetchers.baostock_fetcher import BaostockFetcher
 from data_fetch.manager import DataSrc
 from data_process.chan import Chan
 from data_process.chan_config import ChanConfig
@@ -14,7 +14,7 @@ if __name__ == "__main__":
     code = "sz.000001"
     begin_time = "2023-06-01"
     end_time = None
-    data_src = DataSrc.BAO_STOCK
+    data_src = DataSrc.BAOSTOCK
     lv_list = [LvType.K_DAY, LvType.K_30M]
 
     config = ChanConfig({
@@ -32,9 +32,9 @@ if __name__ == "__main__":
         config=config,
         autype=AuType.QFQ,  # 已经没啥用了这一行
     )
-    BaoStockFetcher.do_init()
-    data_src_day = BaoStockFetcher(code, k_type=LvType.K_DAY, begin_date=begin_time, end_date=end_time, autype=AuType.QFQ)
-    data_src_30m = BaoStockFetcher(code, k_type=LvType.K_30M, begin_date=begin_time, end_date=end_time, autype=AuType.QFQ)
+    BaostockFetcher.do_init()
+    data_src_day = BaostockFetcher(code, k_type=LvType.K_DAY, begin_date=begin_time, end_date=end_time, autype=AuType.QFQ)
+    data_src_30m = BaostockFetcher(code, k_type=LvType.K_30M, begin_date=begin_time, end_date=end_time, autype=AuType.QFQ)
     kl_30m_all = list(data_src_30m.get_kl_data())
 
     for _idx, klu in enumerate(data_src_day.get_kl_data()):
@@ -51,4 +51,4 @@ if __name__ == "__main__":
         print("当前所有日线:", [klu.time.to_str() for klu in chan[0].klu_iter()])
         print("当前所有30M K线:", [klu.time.to_str() for klu in chan[1].klu_iter()], "\n")
 
-    BaoStockFetcher.do_close()
+    BaostockFetcher.do_close()

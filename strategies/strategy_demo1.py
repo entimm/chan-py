@@ -12,7 +12,7 @@ if __name__ == "__main__":
     code = "sz.000001"
     begin_time = "2021-01-01"
     end_time = None
-    data_src = DataSrc.BAO_STOCK
+    data_src = DataSrc.BAOSTOCK
     lv_list = [LvType.K_DAY]
 
     config = ChanConfig({

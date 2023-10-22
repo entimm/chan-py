@@ -14,7 +14,7 @@ class LocalFetcher(AbsStockApi):
         file_path = "data/_local.csv"
         df = pd.read_csv(file_path)
 
-        for index, row in df.iterrows():
+        for index, row in df.tail(10000).iterrows():
             data_dict = {
                 DataField.FIELD_TIME: parse_normal_date_str(row["Date"]),
                 DataField.FIELD_OPEN: str2float(row["Open"]),

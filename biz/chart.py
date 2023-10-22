@@ -11,7 +11,7 @@ def make_chan_data(ticker, start, end, lv):
         begin_time=start,
         end_time=end,
 
-        data_src=DataSrc.LOCAL,
+        data_src=DataSrc.BAOSTOCK,
         autype=AuType.QFQ,
         lv_list=[lv],
 

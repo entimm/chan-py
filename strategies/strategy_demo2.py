@@ -3,7 +3,7 @@ from data_process.chan_config import ChanConfig
 from data_process.common.cenum import BspType, FxType
 from common.const import AuType, LvType
 from data_fetch.manager import DataSrc
-from data_fetch.fetchers.baostock_fetcher import BaoStockFetcher
+from data_fetch.fetchers.baostock_fetcher import BaostockFetcher
 from data_process.kline.kline_unit import Kline_Unit
 
 if __name__ == "__main__":
@@ -15,7 +15,7 @@ if __name__ == "__main__":
     code = "sz.000001"
     begin_time = "2021-01-01"
     end_time = None
-    data_src_type = DataSrc.BAO_STOCK
+    data_src_type = DataSrc.BAOSTOCK
     lv_list = [LvType.K_DAY]
 
     config = ChanConfig({
@@ -33,8 +33,8 @@ if __name__ == "__main__":
         config=config,
         autype=AuType.QFQ,  # 已经没啥用了这一行
     )
-    BaoStockFetcher.do_init()
-    data_src = BaoStockFetcher(code, k_type=LvType.K_DAY, begin_date=begin_time, end_date=end_time, autype=AuType.QFQ)  # 初始化数据源类
+    BaostockFetcher.do_init()
+    data_src = BaostockFetcher(code, k_type=LvType.K_DAY, begin_date=begin_time, end_date=end_time, autype=AuType.QFQ)  # 初始化数据源类
 
     is_hold = False
     last_buy_price = None
@@ -57,4 +57,4 @@ if __name__ == "__main__":
             sell_price = cur_lv_chan[-1][-1].close
             print(f'{cur_lv_chan[-1][-1].time}:sell price = {sell_price}, profit rate = {(sell_price-last_buy_price)/last_buy_price*100:.2f}%')
             is_hold = False
-    BaoStockFetcher.do_close()
+    BaostockFetcher.do_close()

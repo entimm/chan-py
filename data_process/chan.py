@@ -20,7 +20,7 @@ class Chan:
         code,
         begin_time=None,
         end_time=None,
-        data_src: Union[DataSrc, str] = DataSrc.BAO_STOCK,
+        data_src: Union[DataSrc, str] = DataSrc.BAOSTOCK,
         lv_list=None,
         config=None,
         autype: AuType = AuType.QFQ,

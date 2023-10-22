@@ -6,11 +6,11 @@ from common.func_util import kl_type_lt_day
 from data_fetch.abs_stock_api import AbsStockApi
 
 
-class BaoStockFetcher(AbsStockApi):
+class BaostockFetcher(AbsStockApi):
     is_connect = None
 
     def __init__(self, code, k_type=LvType.K_DAY, begin_date=None, end_date=None, autype=AuType.QFQ):
-        super(BaoStockFetcher, self).__init__(code, k_type, begin_date, end_date, autype)
+        super(BaostockFetcher, self).__init__(code, k_type, begin_date, end_date, autype)
 
     def get_kl_data(self):
         # 天级别以上才有详细交易信息

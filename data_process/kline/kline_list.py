@@ -92,12 +92,14 @@ class Kline_List:
             self.lst.append(Kline(klu, idx=0))
         else:
             _dir = self.lst[-1].try_add(klu)
-            if _dir != KlineDir.COMBINE:  # 不需要合并K线
+            # 不需要合并K线
+            if _dir != KlineDir.COMBINE:
                 self.lst.append(Kline(klu, idx=len(self.lst), _dir=_dir))
                 if len(self.lst) >= 3:
                     self.lst[-2].update_fx(self.lst[-3], self.lst[-1])
                 if self.bi_list.update_bi(self.lst[-2], self.lst[-1], self.step_calculation) and self.step_calculation:
                     self.cal_seg_and_zs()
+            # 需要合并K线
             elif self.step_calculation and self.bi_list.try_add_virtual_bi(self.lst[-1], need_del_end=True):  # 这里的必要性参见issue#175
                 self.cal_seg_and_zs()
 
